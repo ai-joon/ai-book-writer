@@ -1,0 +1,207 @@
+groups:
+  - name: sopher-ai-application
+    rules:
+      # High-level application health alerts
+      - alert: ApplicationDown
+        expr: up{job="sopher-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: backend
+        annotations:
+          summary: "Sopher.AI backend is down"
+          description: "Backend service has been down for more than 1 minute"
+
+      - alert: FrontendDown
+        expr: up{job="nginx"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: frontend
+        annotations:
+          summary: "Sopher.AI frontend is unreachable"
+          description: "Frontend service has been unreachable for more than 2 minutes"
+
+      # Response time and performance alerts
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="sopher-backend"}[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+          component: backend
+        annotations:
+          summary: "High response time detected"
+          description: "95th percentile response time is above 2 seconds for the last 5 minutes"
+
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{job="sopher-backend",status=~"5.."}[5m]) / rate(http_requests_total{job="sopher-backend"}[5m]) > 0.1
+        for: 3m
+        labels:
+          severity: warning
+          component: backend
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is above 10% for the last 3 minutes"
+
+  - name: sopher-ai-infrastructure
+    rules:
+      # Database alerts
+      - alert: PostgreSQLDown
+        expr: up{job="postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "PostgreSQL database is down"
+          description: "PostgreSQL has been down for more than 1 minute"
+
+      - alert: PostgreSQLHighConnections
+        expr: pg_stat_database_numbackends{job="postgres"} / pg_settings_max_connections{job="postgres"} > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "PostgreSQL connection usage is high"
+          description: "PostgreSQL is using more than 80% of available connections"
+
+      # Redis alerts
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: cache
+        annotations:
+          summary: "Redis cache is down"
+          description: "Redis has been down for more than 1 minute"
+
+      - alert: RedisHighMemoryUsage
+        expr: redis_memory_used_bytes{job="redis"} / redis_config_maxmemory{job="redis"} > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          component: cache
+        annotations:
+          summary: "Redis memory usage is high"
+          description: "Redis is using more than 90% of allocated memory"
+
+      # Container resource alerts
+      - alert: HighCPUUsage
+        expr: rate(container_cpu_usage_seconds_total[5m]) * 100 > 80
+        for: 10m
+        labels:
+          severity: warning
+          component: container
+        annotations:
+          summary: "Container CPU usage is high"
+          description: "Container {{ $labels.name }} CPU usage is above 80% for 10 minutes"
+
+      - alert: HighMemoryUsage
+        expr: (container_memory_usage_bytes / container_spec_memory_limit_bytes) * 100 > 90
+        for: 5m
+        labels:
+          severity: warning
+          component: container
+        annotations:
+          summary: "Container memory usage is high"
+          description: "Container {{ $labels.name }} memory usage is above 90% for 5 minutes"
+
+  - name: sopher-ai-business
+    rules:
+      # Cost and budget alerts
+      - alert: MonthlyBudgetExceeded
+        expr: sopher_ai_monthly_cost_usd > 500
+        for: 1m
+        labels:
+          severity: critical
+          component: billing
+        annotations:
+          summary: "Monthly budget exceeded"
+          description: "Monthly cost has exceeded $500 budget: ${{ $value }}"
+
+      - alert: HighTokenUsageRate
+        expr: rate(sopher_ai_tokens_used_total[1h]) > 1000000
+        for: 15m
+        labels:
+          severity: warning
+          component: billing
+        annotations:
+          summary: "High token usage rate detected"
+          description: "Token usage rate is above 1M tokens per hour for 15 minutes"
+
+      # Agent performance alerts
+      - alert: AgentHighLatency
+        expr: histogram_quantile(0.95, rate(sopher_ai_agent_duration_seconds_bucket[5m])) > 30
+        for: 5m
+        labels:
+          severity: warning
+          component: agents
+        annotations:
+          summary: "High agent processing latency"
+          description: "Agent {{ $labels.agent_name }} 95th percentile latency is above 30 seconds"
+
+      - alert: AgentHighFailureRate
+        expr: rate(sopher_ai_agent_failures_total[5m]) / rate(sopher_ai_agent_requests_total[5m]) > 0.1
+        for: 3m
+        labels:
+          severity: warning
+          component: agents
+        annotations:
+          summary: "High agent failure rate"
+          description: "Agent failure rate is above 10% for the last 3 minutes"
+
+      # Streaming performance alerts
+      - alert: SSEConnectionsHigh
+        expr: sopher_ai_sse_active_connections > 100
+        for: 10m
+        labels:
+          severity: warning
+          component: streaming
+        annotations:
+          summary: "High number of active SSE connections"
+          description: "Active SSE connections: {{ $value }}. This may impact performance."
+
+      - alert: SSELatencyHigh
+        expr: histogram_quantile(0.95, rate(sopher_ai_sse_latency_seconds_bucket[5m])) > 0.3
+        for: 5m
+        labels:
+          severity: warning
+          component: streaming
+        annotations:
+          summary: "High SSE streaming latency"
+          description: "95th percentile SSE latency is above 300ms: {{ $value }}s"
+
+  - name: sopher-ai-security
+    rules:
+      # Security and authentication alerts
+      - alert: HighFailedAuthRate
+        expr: rate(sopher_ai_auth_failures_total[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+          component: security
+        annotations:
+          summary: "High authentication failure rate"
+          description: "Authentication failures: {{ $value }} per second for 2 minutes"
+
+      - alert: RateLimitHit
+        expr: rate(sopher_ai_rate_limit_exceeded_total[1m]) > 5
+        for: 1m
+        labels:
+          severity: warning
+          component: security
+        annotations:
+          summary: "Rate limiting frequently triggered"
+          description: "Rate limit exceeded {{ $value }} times per second"
+
+      - alert: UnauthorizedAccess
+        expr: rate(http_requests_total{status="401"}[5m]) > 5
+        for: 3m
+        labels:
+          severity: warning
+          component: security
+        annotations:
+          summary: "High rate of unauthorized access attempts"
+          description: "401 responses: {{ $value }} per second for 3 minutes"

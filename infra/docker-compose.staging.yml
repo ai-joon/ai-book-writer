@@ -1,0 +1,49 @@
+# Staging environment configuration
+# Usage: docker-compose -f docker-compose.prod.yml -f docker-compose.staging.yml up
+
+version: '3.8'
+
+services:
+  backend:
+    environment:
+      ENVIRONMENT: staging
+      LOG_LEVEL: DEBUG
+      DEBUG: "false"
+      CORS_ORIGINS: "https://staging.sopher.ai"
+      NEXT_PUBLIC_BACKEND_URL: https://staging-api.sopher.ai
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+        reservations:
+          memory: 512M
+          cpus: '0.25'
+
+  frontend:
+    environment:
+      NEXT_PUBLIC_BACKEND_URL: https://staging-api.sopher.ai
+      NEXT_PUBLIC_ENVIRONMENT: staging
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.25'
+        reservations:
+          memory: 256M
+          cpus: '0.125'
+
+  postgres:
+    environment:
+      POSTGRES_DB: sopherai_staging
+
+  # Disable unnecessary services in staging
+  grafana:
+    deploy:
+      replicas: 0
+
+  nginx:
+    deploy:
+      replicas: 0

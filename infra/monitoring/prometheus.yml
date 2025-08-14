@@ -1,0 +1,129 @@
+global:
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'sopher-ai'
+    environment: 'production'
+
+rule_files:
+  - "alerts.yml"
+
+scrape_configs:
+  # FastAPI Backend Metrics
+  - job_name: 'sopher-backend'
+    static_configs:
+      - targets: ['backend:9000']
+    scrape_interval: 15s
+    metrics_path: '/api/metrics'
+    honor_labels: true
+    params:
+      format: ['prometheus']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: '([^:]+)(?::\d+)?'
+        replacement: '${1}'
+
+  # Redis Metrics via Redis Exporter
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    scrape_interval: 30s
+    metrics_path: '/metrics'
+    honor_labels: true
+
+  # PostgreSQL Metrics via Postgres Exporter
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres:5432']
+    scrape_interval: 30s
+    metrics_path: '/metrics'
+    honor_labels: true
+
+  # Docker Container Metrics via cAdvisor
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+    scrape_interval: 30s
+    metrics_path: '/metrics'
+    honor_labels: true
+
+  # Node/System Metrics via Node Exporter
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 30s
+    metrics_path: '/metrics'
+    honor_labels: true
+
+  # Nginx Metrics via Nginx Prometheus Exporter
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:9113']
+    scrape_interval: 30s
+    metrics_path: '/metrics'
+    honor_labels: true
+
+  # Prometheus Self-Monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 30s
+    metrics_path: '/metrics'
+    honor_labels: true
+
+  # Application-specific Custom Metrics
+  - job_name: 'sopher-ai-custom'
+    static_configs:
+      - targets: ['backend:9000']
+    scrape_interval: 10s
+    metrics_path: '/api/metrics/custom'
+    honor_labels: true
+    params:
+      scope: ['agents', 'costs', 'streaming']
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+      path_prefix: /
+      scheme: http
+      timeout: 10s
+      api_version: v2
+
+# Remote write configuration for GCP Monitoring (commented out - enable for GKE)
+# remote_write:
+#   - url: "https://monitoring.googleapis.com/v1/projects/PROJECT_ID/location/global/prometheus/api/v1/write"
+#     queue_config:
+#       capacity: 2500
+#       max_shards: 200
+#       min_shards: 1
+#       max_samples_per_send: 500
+#       batch_send_deadline: 5s
+#       min_backoff: 30ms
+#       max_backoff: 100ms
+#     metadata_config:
+#       send: true
+#       send_interval: 30s
+#     headers:
+#       Authorization: "Bearer TOKEN"
+
+# Storage configuration
+storage:
+  tsdb:
+    path: /prometheus
+    retention.time: 30d
+    retention.size: 10GB
+    min-block-duration: 2h
+    max-block-duration: 25h
+
+# Web configuration
+web:
+  console.templates: /usr/share/prometheus/consoles
+  console.libraries: /usr/share/prometheus/console_libraries
+  enable-lifecycle: true
+  enable-admin-api: true
+  max-connections: 512
+  read-timeout: 30s

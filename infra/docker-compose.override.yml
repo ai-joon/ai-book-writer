@@ -1,0 +1,45 @@
+# Default override for local development
+# This file is automatically loaded by docker-compose alongside docker-compose.yml
+
+version: '3.8'
+
+services:
+  backend:
+    build:
+      target: runtime
+    volumes:
+      # Enable hot reload for development
+      - ../backend/app:/app/app:ro
+    environment:
+      DEBUG: "true"
+      LOG_LEVEL: DEBUG
+      CORS_ORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
+    ports:
+      - "8000:8000"
+      - "9000:9000"
+
+  frontend:
+    build:
+      target: runtime
+    environment:
+      NEXT_PUBLIC_BACKEND_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+
+  redis:
+    ports:
+      - "6379:6379"
+
+  postgres:
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: dev_password_change_in_production
+
+  prometheus:
+    ports:
+      - "9090:9090"
+
+  grafana:
+    ports:
+      - "3001:3000"

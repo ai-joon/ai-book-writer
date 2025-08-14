@@ -1,0 +1,4 @@
+# SSL certificates directory
+# Place your SSL certificate files here:
+# - sopher.ai.pem (certificate chain)
+# - sopher.ai.key (private key)
