@@ -27,6 +27,9 @@ RUN npm ci --ignore-scripts && npm cache clean --force
 # Copy source code with proper layer caching
 COPY . .
 
+# Ensure public directory exists for Next.js
+RUN mkdir -p public
+
 # Set build-time environment variables
 ENV NEXT_TELEMETRY_DISABLED=1 \
     NODE_ENV=production
