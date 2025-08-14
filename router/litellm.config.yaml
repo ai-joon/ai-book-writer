@@ -1,0 +1,85 @@
+model_list:
+  - model_name: claude-3-5-sonnet
+    litellm_params:
+      model: anthropic/claude-3-5-sonnet-20241022
+      api_key: ${ANTHROPIC_API_KEY}
+      max_tokens: 8192
+      temperature: 0.7
+      
+  - model_name: gpt-4o
+    litellm_params:
+      model: openai/gpt-4o
+      api_key: ${OPENAI_API_KEY}
+      max_tokens: 4096
+      temperature: 0.7
+      
+  - model_name: gpt-4o-mini
+    litellm_params:
+      model: openai/gpt-4o-mini
+      api_key: ${OPENAI_API_KEY}
+      max_tokens: 4096
+      temperature: 0.7
+      
+  - model_name: gemini-1.5-pro
+    litellm_params:
+      model: google/gemini-1.5-pro-latest
+      api_key: ${GOOGLE_API_KEY}
+      max_tokens: 8192
+      temperature: 0.7
+      
+  - model_name: gemini-1.5-flash
+    litellm_params:
+      model: google/gemini-1.5-flash-latest
+      api_key: ${GOOGLE_API_KEY}
+      max_tokens: 8192
+      temperature: 0.7
+
+routing:
+  strategy: usage-based-routing
+  fallbacks:
+    - primary: claude-3-5-sonnet
+      secondary: gpt-4o
+    - primary: gpt-4o
+      secondary: claude-3-5-sonnet
+  overflow:
+    trigger: context_window_exceeded
+    route_to: gemini-1.5-pro
+  cheap_fallback:
+    models:
+      - gpt-4o-mini
+      - gemini-1.5-flash
+
+redis:
+  url: ${REDIS_URL:-redis://localhost:6379/0}
+  
+cache:
+  response_ttl_seconds: 3600
+  conversation_ttl_seconds: 86400
+  enabled: true
+
+budgets:
+  monthly_usd_limit: ${MONTHLY_BUDGET_USD:-500}
+  agent_allocations:
+    writer: 0.60
+    editor: 0.25
+    continuity_checker: 0.10
+    concept_generator: 0.03
+    outliner: 0.02
+
+rate_limits:
+  per_key:
+    rpm: 60
+    tpm: 1000000
+    
+backoff:
+  initial_seconds: 4
+  max_retries: 3
+  jitter: true
+  
+cost_tracking:
+  enabled: true
+  track_per_request: true
+  
+logging:
+  level: INFO
+  json_logs: true
