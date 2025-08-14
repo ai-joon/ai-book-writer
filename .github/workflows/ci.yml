@@ -214,7 +214,14 @@ jobs:
     
     - name: Deploy to Kubernetes
       if: steps.check-gcp.outputs.has_credentials == 'true'
+      env:
+        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
       run: |
+        # Apply secrets with environment variable substitution
+        envsubst < infra/k8s/secret.yaml | kubectl apply -f -
+        
         # Update image tags
         kubectl set image deployment/sopher-api \
           api=${{ env.REGISTRY }}/${{ github.repository_owner }}/sopher-backend:${{ github.sha }} \
