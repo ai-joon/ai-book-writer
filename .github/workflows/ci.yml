@@ -233,6 +233,8 @@ jobs:
         ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        FERNET_KEY: ${{ secrets.FERNET_KEY }}
       run: |
         # Apply secrets with environment variable substitution
         envsubst < infra/k8s/secret.yaml | kubectl apply -f -
