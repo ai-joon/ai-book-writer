@@ -1,23 +1,23 @@
 """Outline generation endpoint with SSE streaming"""
 
+import hashlib
 import json
 import time
-import hashlib
-from typing import AsyncIterator, Optional
-from fastapi import APIRouter, Request, Depends, HTTPException, BackgroundTasks
-from sse_starlette.sse import EventSourceResponse
-from sqlalchemy.ext.asyncio import AsyncSession
-from uuid import UUID, uuid4
-import litellm
-from litellm import acompletion
+from typing import AsyncIterator
+from uuid import UUID
 
-from ..db import get_db
-from ..cache import cache
-from ..security import get_current_user, TokenData
-from ..schemas import OutlineRequest, TokenStreamEvent
-from ..metrics import MetricsTracker, llm_inference_seconds, active_sessions
-from ..models import Session, Event, Artifact, Cost
+from fastapi import APIRouter, BackgroundTasks, Depends, Request
+from litellm import acompletion
+from sqlalchemy.ext.asyncio import AsyncSession
+from sse_starlette.sse import EventSourceResponse
+
 from ..agents.agents import BookWritingAgents
+from ..cache import cache
+from ..db import get_db
+from ..metrics import MetricsTracker, active_sessions
+from ..models import Artifact, Cost, Event, Session
+from ..schemas import OutlineRequest
+from ..security import TokenData, get_current_user
 
 router = APIRouter(prefix="/projects/{project_id}", tags=["outline"])
 
@@ -31,12 +31,12 @@ async def event_generator(
     user: TokenData
 ) -> AsyncIterator[dict]:
     """Generate SSE events for outline streaming"""
-    
+
     active_sessions.inc()
     start_time = time.perf_counter()
     tokens_emitted = 0
     model = "claude-3-5-sonnet"
-    
+
     try:
         # Check cache
         cache_key = cache.cache_key(
@@ -44,7 +44,7 @@ async def event_generator(
             str(project_id),
             hashlib.md5(outline_request.brief.encode()).hexdigest()
         )
-        
+
         cached_result = await cache.get(cache_key)
         if cached_result:
             MetricsTracker.track_cache(hit=True, cache_type="outline")
@@ -57,31 +57,31 @@ async def event_generator(
                 "data": json.dumps({"cached": True, "tokens": 0})
             }
             return
-        
+
         MetricsTracker.track_cache(hit=False, cache_type="outline")
-        
+
         # Create outline generation prompt
         agents = BookWritingAgents(model=model)
-        
+
         # First, generate concepts
         yield {
             "event": "checkpoint",
             "data": json.dumps({"stage": "generating_concepts", "progress": 0.1})
         }
-        
+
         concepts = await agents.generate_concepts(
             brief=outline_request.brief,
             plot_seeds=None
         )
-        
+
         yield {
-            "event": "checkpoint", 
+            "event": "checkpoint",
             "data": json.dumps({"stage": "concepts_complete", "progress": 0.3})
         }
-        
+
         # Stream outline generation
         with MetricsTracker.track_inference(model, "outliner", "outline_generation"):
-            
+
             prompt = f"""Create a detailed {outline_request.target_chapters}-chapter book outline.
 
 Brief: {outline_request.brief}
@@ -114,28 +114,28 @@ Format as structured markdown."""
                 max_tokens=4096,
                 temperature=0.7
             )
-            
+
             buffer = []
             checkpoint_counter = 0
-            
+
             async for chunk in stream:
                 if await request.is_disconnected():
                     break
-                
+
                 choice = chunk.get("choices", [{}])[0]
                 delta = choice.get("delta", {})
                 content = delta.get("content", "")
-                
+
                 if content:
                     tokens_emitted += 1
                     buffer.append(content)
-                    
+
                     # Send token event
                     yield {
                         "event": "token",
                         "data": content
                     }
-                    
+
                     # Send checkpoint every 100 tokens
                     if tokens_emitted % 100 == 0:
                         checkpoint_counter += 1
@@ -149,13 +149,13 @@ Format as structured markdown."""
                                 "preview": "".join(buffer[-500:])
                             })
                         }
-                
+
                 # Get usage info if available
                 if chunk.get("usage"):
                     usage = chunk["usage"]
                     prompt_tokens = usage.get("prompt_tokens", 0)
                     completion_tokens = usage.get("completion_tokens", 0)
-                    
+
                     # Track metrics
                     MetricsTracker.track_tokens(
                         model=model,
@@ -163,7 +163,7 @@ Format as structured markdown."""
                         prompt_tokens=prompt_tokens,
                         completion_tokens=completion_tokens
                     )
-                    
+
                     # Calculate cost (example rates)
                     cost_per_1k_prompt = 0.003
                     cost_per_1k_completion = 0.015
@@ -171,9 +171,9 @@ Format as structured markdown."""
                         (prompt_tokens / 1000) * cost_per_1k_prompt +
                         (completion_tokens / 1000) * cost_per_1k_completion
                     )
-                    
+
                     MetricsTracker.track_cost(model, "outliner", total_cost)
-                    
+
                     # Save cost to database
                     cost_record = Cost(
                         session_id=session.id,
@@ -184,13 +184,13 @@ Format as structured markdown."""
                         usd=total_cost
                     )
                     db.add(cost_record)
-        
+
         # Final outline
         final_outline = "".join(buffer)
-        
+
         # Save to cache
         await cache.set(cache_key, final_outline, ttl=3600)
-        
+
         # Save artifact to database
         artifact = Artifact(
             session_id=session.id,
@@ -203,7 +203,7 @@ Format as structured markdown."""
             blob=final_outline.encode()
         )
         db.add(artifact)
-        
+
         # Log event
         event = Event(
             session_id=session.id,
@@ -215,9 +215,9 @@ Format as structured markdown."""
             }
         )
         db.add(event)
-        
+
         await db.commit()
-        
+
         # Send completion event
         yield {
             "event": "complete",
@@ -227,7 +227,7 @@ Format as structured markdown."""
                 "outline_id": str(artifact.id)
             })
         }
-        
+
     except Exception as e:
         MetricsTracker.track_model_error(model, type(e).__name__)
         yield {
@@ -248,7 +248,7 @@ async def stream_outline(
     background_tasks: BackgroundTasks = BackgroundTasks()
 ) -> EventSourceResponse:
     """Stream outline generation via Server-Sent Events"""
-    
+
     # Create session
     session = Session(
         project_id=project_id,
@@ -263,10 +263,10 @@ async def stream_outline(
     db.add(session)
     await db.commit()
     await db.refresh(session)
-    
+
     # Track API request
     MetricsTracker.track_api_request("POST", "/outline/stream", 200)
-    
+
     return EventSourceResponse(
         event_generator(
             request=request,

@@ -1,14 +1,19 @@
 """Prometheus metrics for observability"""
 
-from typing import Dict, Any
-from fastapi import APIRouter, Response
-from prometheus_client import (
-    Counter, Histogram, Gauge, Summary,
-    generate_latest, CONTENT_TYPE_LATEST,
-    CollectorRegistry, multiprocess, start_http_server
-)
 import os
 import time
+from typing import Any, Dict
+
+from fastapi import APIRouter, Response
+from prometheus_client import (
+    CONTENT_TYPE_LATEST,
+    CollectorRegistry,
+    Counter,
+    Gauge,
+    Histogram,
+    generate_latest,
+    multiprocess,
+)
 
 # Create registry for metrics
 if os.getenv("prometheus_multiproc_dir"):
@@ -100,7 +105,7 @@ budget_exceeded = Counter(
 
 class MetricsTracker:
     """Helper class for tracking metrics"""
-    
+
     @staticmethod
     def track_inference(model: str, agent: str, operation: str):
         """Context manager for tracking inference time"""
@@ -108,7 +113,7 @@ class MetricsTracker:
             def __enter__(self):
                 self.start = time.perf_counter()
                 return self
-            
+
             def __exit__(self, *args):
                 duration = time.perf_counter() - self.start
                 llm_inference_seconds.labels(
@@ -116,9 +121,9 @@ class MetricsTracker:
                     agent=agent,
                     operation=operation
                 ).observe(duration)
-        
+
         return Timer()
-    
+
     @staticmethod
     def track_tokens(
         model: str,
@@ -132,18 +137,18 @@ class MetricsTracker:
             agent=agent,
             token_type="prompt"
         ).inc(prompt_tokens)
-        
+
         llm_tokens_total.labels(
             model=model,
             agent=agent,
             token_type="completion"
         ).inc(completion_tokens)
-    
+
     @staticmethod
     def track_cost(model: str, agent: str, cost_usd: float):
         """Track cost in USD"""
         llm_cost_usd.labels(model=model, agent=agent).inc(cost_usd)
-    
+
     @staticmethod
     def track_cache(hit: bool, cache_type: str = "response"):
         """Track cache hit/miss"""
@@ -151,7 +156,7 @@ class MetricsTracker:
             cache_hits.labels(cache_type=cache_type).inc()
         else:
             cache_misses.labels(cache_type=cache_type).inc()
-    
+
     @staticmethod
     def track_api_request(method: str, endpoint: str, status_code: int):
         """Track API request"""
@@ -160,7 +165,7 @@ class MetricsTracker:
             endpoint=endpoint,
             status=str(status_code)
         ).inc()
-    
+
     @staticmethod
     def track_model_error(model: str, error_type: str):
         """Track model API errors"""

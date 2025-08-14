@@ -1,17 +1,21 @@
 """Property-based tests using Hypothesis"""
 
 import json
-from hypothesis import given, strategies as st, assume
-from hypothesis.strategies import composite
-import jsonschema
 from datetime import datetime
-from uuid import UUID
+
+import jsonschema
+from hypothesis import assume, given
+from hypothesis import strategies as st
+from hypothesis.strategies import composite
 
 from app.schemas import (
-    OutlineRequest, ChapterDraftRequest, ContinuityReport,
-    TokenStreamEvent, AgentStatus, CostReport
+    AgentStatus,
+    ChapterDraftRequest,
+    ContinuityReport,
+    CostReport,
+    OutlineRequest,
+    TokenStreamEvent,
 )
-
 
 # Define JSON schemas for validation
 OUTLINE_SCHEMA = {
@@ -81,7 +85,7 @@ def test_outline_request_serialization(request):
     # Should serialize to JSON
     json_data = request.model_dump_json()
     assert json_data
-    
+
     # Should deserialize back
     parsed = json.loads(json_data)
     reconstructed = OutlineRequest(**parsed)
@@ -94,10 +98,10 @@ def test_chapter_request_validation(request):
     """Test chapter request validation"""
     # Chapter number must be positive
     assert request.chapter_number > 0
-    
+
     # Outline must not be empty
     assert len(request.outline) >= 10
-    
+
     # Should be JSON serializable
     json.dumps(request.model_dump())
 
@@ -116,11 +120,11 @@ def test_continuity_report_schema(inconsistencies, suggestions, confidence):
         character_issues=[],
         confidence_score=confidence
     )
-    
+
     # Validate against schema
     report_dict = report.model_dump()
     jsonschema.validate(report_dict, CONTINUITY_REPORT_SCHEMA)
-    
+
     # Confidence score bounds
     assert 0.0 <= report.confidence_score <= 1.0
 
@@ -129,11 +133,11 @@ def test_continuity_report_schema(inconsistencies, suggestions, confidence):
 def test_chapter_numbering_continuity(num_chapters):
     """Test that chapter numbers are continuous"""
     chapters = [{"number": i, "title": f"Chapter {i}"} for i in range(1, num_chapters + 1)]
-    
+
     # Check continuity
     for i, chapter in enumerate(chapters, 1):
         assert chapter["number"] == i
-    
+
     # No gaps
     numbers = [c["number"] for c in chapters]
     assert numbers == list(range(1, num_chapters + 1))
@@ -151,11 +155,11 @@ def test_token_stream_event(event_name, event_type, data):
         data=data,
         metadata={"timestamp": datetime.now().isoformat()}
     )
-    
+
     # Should be serializable
     json_str = event.model_dump_json()
     parsed = json.loads(json_str)
-    
+
     # Required fields present
     assert "event" in parsed
     assert "data" in parsed
@@ -171,10 +175,10 @@ def test_cost_report_calculations(total_usd, total_tokens, period_start):
     """Test cost report calculations"""
     assume(total_usd >= 0)
     assume(total_tokens >= 0)
-    
+
     period_end = datetime.now()
     assume(period_end > period_start)
-    
+
     report = CostReport(
         total_usd=total_usd,
         total_tokens=total_tokens,
@@ -183,12 +187,12 @@ def test_cost_report_calculations(total_usd, total_tokens, period_start):
         period_start=period_start,
         period_end=period_end
     )
-    
+
     # Validate constraints
     assert report.total_usd >= 0
     assert report.total_tokens >= 0
     assert report.period_end >= report.period_start
-    
+
     # Should be JSON serializable
     json.dumps(report.model_dump(), default=str)
 
@@ -205,15 +209,15 @@ def test_agent_status_progress(agent_name, status, progress):
         status=status,
         progress=progress
     )
-    
+
     # Progress must be between 0 and 1
     if agent_status.progress is not None:
         assert 0.0 <= agent_status.progress <= 1.0
-    
+
     # Complete status should have progress = 1.0 or None
     if status == "complete" and progress is not None:
         assert progress == 1.0 or progress is None
-    
+
     # Error status should not have progress > 0
     if status == "error" and progress is not None:
         assert progress == 0.0 or progress is None
@@ -227,9 +231,9 @@ def test_outline_always_has_structure(outline_text):
         "outline_markdown": outline_text,
         "chapters": []
     }
-    
+
     # Must have markdown content
     assert len(outline["outline_markdown"]) >= 10
-    
+
     # Validate against schema
     jsonschema.validate(outline, OUTLINE_SCHEMA)

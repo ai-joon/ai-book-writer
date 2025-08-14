@@ -1,18 +1,19 @@
 """Main FastAPI application for sopher.ai"""
 
-import os
 import logging
+import os
 from contextlib import asynccontextmanager
+
+import litellm
 from fastapi import FastAPI, Request, status
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
-import litellm
 
-from .db import init_db, close_db
 from .cache import cache
-from .metrics import metrics_router, MetricsTracker
+from .db import close_db, init_db
+from .metrics import MetricsTracker, metrics_router
 from .routers import outline
 from .security import create_access_token
 
@@ -42,9 +43,9 @@ async def lifespan(app: FastAPI):
     await init_db()
     await cache.connect()
     logger.info("Database and cache connected")
-    
+
     yield
-    
+
     # Shutdown
     logger.info("Shutting down sopher.ai backend...")
     await cache.disconnect()
@@ -172,12 +173,12 @@ async def track_requests(request: Request, call_next):
     """Track all HTTP requests"""
     import time
     start_time = time.perf_counter()
-    
+
     response = await call_next(request)
-    
+
     process_time = time.perf_counter() - start_time
     response.headers["X-Process-Time"] = str(process_time)
-    
+
     # Track metrics for successful requests
     if response.status_code < 400:
         MetricsTracker.track_api_request(
@@ -185,5 +186,5 @@ async def track_requests(request: Request, call_next):
             endpoint=request.url.path,
             status_code=response.status_code
         )
-    
+
     return response

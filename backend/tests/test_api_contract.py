@@ -1,16 +1,15 @@
 """API contract tests for sopher.ai backend"""
 
-import pytest
-import httpx
-from httpx import AsyncClient
-from fastapi.testclient import TestClient
 import json
-from unittest.mock import patch, AsyncMock
-from datetime import datetime
+from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
+import pytest
+from fastapi.testclient import TestClient
+from httpx import AsyncClient
+
 from app.main import app
-from app.schemas import OutlineRequest, ChapterDraftRequest, ContinuityReport
+from app.schemas import ChapterDraftRequest, ContinuityReport, OutlineRequest
 
 
 @pytest.fixture
@@ -45,7 +44,7 @@ async def test_health_endpoints(async_client: AsyncClient):
     response = await async_client.get("/healthz")
     assert response.status_code == 200
     assert response.json()["status"] == "healthy"
-    
+
     # Test livez
     response = await async_client.get("/livez")
     assert response.status_code == 200
@@ -57,7 +56,7 @@ async def test_demo_token_generation(async_client: AsyncClient):
     """Test demo token generation"""
     response = await async_client.post("/auth/demo-token")
     assert response.status_code == 200
-    
+
     data = response.json()
     assert "access_token" in data
     assert data["token_type"] == "bearer"
@@ -68,7 +67,7 @@ async def test_demo_token_generation(async_client: AsyncClient):
 async def test_outline_request_validation(async_client: AsyncClient, mock_token):
     """Test outline generation request validation"""
     project_id = str(uuid4())
-    
+
     # Test missing brief
     response = await async_client.post(
         f"/api/v1/projects/{project_id}/outline/stream",
@@ -76,7 +75,7 @@ async def test_outline_request_validation(async_client: AsyncClient, mock_token)
         headers={"Authorization": "Bearer test-token"}
     )
     assert response.status_code == 422
-    
+
     # Test brief too short
     response = await async_client.post(
         f"/api/v1/projects/{project_id}/outline/stream",
@@ -84,7 +83,7 @@ async def test_outline_request_validation(async_client: AsyncClient, mock_token)
         headers={"Authorization": "Bearer test-token"}
     )
     assert response.status_code == 422
-    
+
     # Test invalid target_chapters
     response = await async_client.post(
         f"/api/v1/projects/{project_id}/outline/stream",
@@ -101,22 +100,22 @@ async def test_outline_request_validation(async_client: AsyncClient, mock_token)
 async def test_outline_stream_contract(async_client: AsyncClient, mock_token):
     """Test outline streaming endpoint contract"""
     project_id = str(uuid4())
-    
+
     with patch("app.routers.outline.BookWritingAgents") as mock_agents:
         # Mock the agents
         mock_agent_instance = AsyncMock()
         mock_agent_instance.generate_concepts = AsyncMock(return_value={"concepts": "test"})
         mock_agents.return_value = mock_agent_instance
-        
+
         with patch("app.routers.outline.acompletion") as mock_completion:
             # Mock LLM response
             async def mock_stream():
                 yield {"choices": [{"delta": {"content": "Test"}}]}
                 yield {"choices": [{"delta": {"content": " outline"}}]}
                 yield {"usage": {"prompt_tokens": 100, "completion_tokens": 50}}
-            
+
             mock_completion.return_value = mock_stream()
-            
+
             # Make request
             response = await async_client.post(
                 f"/api/v1/projects/{project_id}/outline/stream",
@@ -126,7 +125,7 @@ async def test_outline_stream_contract(async_client: AsyncClient, mock_token):
                 },
                 headers={"Authorization": "Bearer test-token"}
             )
-            
+
             # Should return SSE response
             assert response.status_code == 200
             assert "text/event-stream" in response.headers.get("content-type", "")
@@ -136,7 +135,7 @@ async def test_outline_stream_contract(async_client: AsyncClient, mock_token):
 async def test_cost_tracking(async_client: AsyncClient, mock_token):
     """Test that costs are tracked properly"""
     project_id = str(uuid4())
-    
+
     with patch("app.routers.outline.Cost") as mock_cost:
         with patch("app.routers.outline.BookWritingAgents"):
             with patch("app.routers.outline.acompletion") as mock_completion:
@@ -146,9 +145,9 @@ async def test_cost_tracking(async_client: AsyncClient, mock_token):
                         "prompt_tokens": 1000,
                         "completion_tokens": 500
                     }}
-                
+
                 mock_completion.return_value = mock_stream()
-                
+
                 # Make request
                 await async_client.post(
                     f"/api/v1/projects/{project_id}/outline/stream",
@@ -158,7 +157,7 @@ async def test_cost_tracking(async_client: AsyncClient, mock_token):
                     },
                     headers={"Authorization": "Bearer test-token"}
                 )
-                
+
                 # Verify cost was tracked
                 assert mock_cost.called
 
@@ -166,20 +165,20 @@ async def test_cost_tracking(async_client: AsyncClient, mock_token):
 @pytest.mark.asyncio
 async def test_rate_limiting():
     """Test rate limiting functionality"""
-    from app.security import RateLimiter
     from app.cache import cache
-    
+    from app.security import RateLimiter
+
     # Mock cache
     cache.redis = AsyncMock()
     cache.increment = AsyncMock(side_effect=[1, 2, 3, 61])  # 61st request
-    
+
     limiter = RateLimiter(requests=60, window=60)
-    
+
     # First 60 requests should pass
     for i in range(3):
         result = await limiter.check_rate_limit("test-key", cache)
         assert result is True
-    
+
     # 61st request should fail
     result = await limiter.check_rate_limit("test-key", cache)
     assert result is False
@@ -195,7 +194,7 @@ def test_schemas_json_serializable():
         target_chapters=10
     )
     json.dumps(outline_req.model_dump())
-    
+
     # Test ChapterDraftRequest
     chapter_req = ChapterDraftRequest(
         outline="Test outline",
@@ -203,7 +202,7 @@ def test_schemas_json_serializable():
         style_guide="Test style"
     )
     json.dumps(chapter_req.model_dump())
-    
+
     # Test ContinuityReport
     report = ContinuityReport(
         inconsistencies=[{"issue": "Name change"}],

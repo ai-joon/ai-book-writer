@@ -2,17 +2,19 @@
 
 import os
 from typing import AsyncGenerator
+
 from sqlalchemy.ext.asyncio import (
-    create_async_engine, 
-    async_sessionmaker, 
+    AsyncEngine,
     AsyncSession,
-    AsyncEngine
+    async_sessionmaker,
+    create_async_engine,
 )
 from sqlalchemy.pool import NullPool
+
 from .models import Base
 
 DATABASE_URL = os.getenv(
-    "DATABASE_URL", 
+    "DATABASE_URL",
     "postgresql+asyncpg://postgres:postgres@localhost:5432/sopherai"
 )
 

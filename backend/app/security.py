@@ -1,15 +1,15 @@
 """Security and authentication"""
 
-import os
-import time
-from datetime import datetime, timedelta
-from typing import Optional, Dict, Any
-from fastapi import Depends, HTTPException, Header, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from jose import JWTError, jwt
-from cryptography.fernet import Fernet
-from passlib.context import CryptContext
 import hashlib
+import os
+from datetime import datetime, timedelta
+from typing import Any, Dict, Optional
+
+from cryptography.fernet import Fernet
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from jose import JWTError, jwt
+from passlib.context import CryptContext
 
 # Configuration
 SECRET_KEY = os.getenv("JWT_SECRET", "dev-secret-key-change-in-production")
@@ -53,7 +53,7 @@ def create_access_token(
         expire = datetime.utcnow() + expires_delta
     else:
         expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    
+
     to_encode.update({"exp": expire, "type": "access"})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
@@ -70,20 +70,20 @@ def verify_token(token: str, token_type: str = "access") -> TokenData:
     """Verify and decode JWT token"""
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        
+
         if payload.get("type") != token_type:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid token type"
             )
-        
+
         user_id: str = payload.get("user_id")
         if user_id is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid token payload"
             )
-        
+
         return TokenData(
             user_id=user_id,
             project_id=payload.get("project_id"),
@@ -133,19 +133,19 @@ def hash_api_key_id(api_key: str) -> str:
 
 class RateLimiter:
     """Rate limiting helper"""
-    
+
     def __init__(self, requests: int = 60, window: int = 60):
         self.requests = requests
         self.window = window
-    
+
     async def check_rate_limit(
-        self, 
+        self,
         key: str,
         cache_client
     ) -> bool:
         """Check if rate limit exceeded"""
         from .cache import cache
-        
+
         count = await cache.increment(f"rate:{key}", ttl=self.window)
         return count <= self.requests
 

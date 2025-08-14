@@ -1,9 +1,10 @@
 """Pydantic schemas for API request/response"""
 
 from datetime import datetime
-from typing import Optional, Dict, Any, List, Literal
+from typing import Any, Dict, List, Literal, Optional
 from uuid import UUID
-from pydantic import BaseModel, Field, ConfigDict
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ProjectCreate(BaseModel):
@@ -15,7 +16,7 @@ class ProjectCreate(BaseModel):
 class ProjectResponse(BaseModel):
     """Project response"""
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: UUID
     name: str
     settings: Dict[str, Any]
@@ -32,7 +33,7 @@ class SessionCreate(BaseModel):
 class SessionResponse(BaseModel):
     """Session response"""
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: UUID
     project_id: UUID
     user_id: str
