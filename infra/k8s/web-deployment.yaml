@@ -22,8 +22,20 @@ spec:
         app: sopher-web
         tier: frontend
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 2000
       containers:
       - name: web
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+              - ALL
         image: ghcr.io/cheesejaguar/sopher-web:latest
         imagePullPolicy: Always
         ports:
@@ -34,6 +46,11 @@ spec:
           value: "http://sopher-api-service:8000"
         - name: NEXT_PUBLIC_BACKEND_URL
           value: "https://api.sopher.ai"
+        volumeMounts:
+        - name: tmp-volume
+          mountPath: /tmp
+        - name: next-cache-volume
+          mountPath: /.next
         resources:
           requests:
             cpu: "100m"
@@ -57,5 +74,10 @@ spec:
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3
+      volumes:
+      - name: tmp-volume
+        emptyDir: {}
+      - name: next-cache-volume
+        emptyDir: {}
       nodeSelector:
         workload: general

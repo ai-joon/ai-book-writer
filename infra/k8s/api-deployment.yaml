@@ -22,8 +22,20 @@ spec:
         app: sopher-api
         tier: backend
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 2000
       containers:
       - name: api
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+              - ALL
         image: ghcr.io/cheesejaguar/sopher-api:latest
         imagePullPolicy: Always
         ports:
@@ -34,6 +46,11 @@ spec:
             name: sopher-ai-config
         - secretRef:
             name: sopher-ai-secrets
+        volumeMounts:
+        - name: tmp-volume
+          mountPath: /tmp
+        - name: var-cache-volume
+          mountPath: /var/cache
         resources:
           requests:
             cpu: "250m"
@@ -65,6 +82,11 @@ spec:
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 30
+      volumes:
+      - name: tmp-volume
+        emptyDir: {}
+      - name: var-cache-volume
+        emptyDir: {}
       nodeSelector:
         workload: general
       tolerations:
