@@ -3,6 +3,7 @@
 import logging
 import os
 from contextlib import asynccontextmanager
+from typing import Literal
 
 import litellm
 from fastapi import FastAPI, Request, status
@@ -25,10 +26,11 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Configure LiteLLM
+cache_type: Literal["redis"] = "redis"
 litellm.cache = litellm.Cache(
-    type="redis",
+    type=cache_type,
     host=os.getenv("REDIS_HOST", "localhost"),
-    port=int(os.getenv("REDIS_PORT", "6379")),
+    port=os.getenv("REDIS_PORT", "6379"),
     db=int(os.getenv("REDIS_DB", "0")),
 )
 litellm.success_callback = ["prometheus"]
