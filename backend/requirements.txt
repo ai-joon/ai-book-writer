@@ -1,0 +1,34 @@
+# Core FastAPI and async dependencies
+fastapi==0.115.4
+uvicorn[standard]==0.32.0
+sse-starlette==2.1.3
+
+# Database and async support
+sqlalchemy[asyncio]==2.0.36
+asyncpg==0.30.0
+alembic==1.14.0
+
+# Caching and session management
+redis==5.2.0
+
+# Security and authentication
+python-jose[cryptography]==3.3.0
+cryptography==43.0.3
+passlib[bcrypt]==1.7.4
+
+# Monitoring and metrics
+prometheus-client==0.21.0
+
+# AI and LLM integration
+litellm==1.52.15
+crewai==0.80.0
+
+# HTTP client and utilities
+httpx==0.28.0
+tenacity==9.0.0
+python-multipart==0.0.17
+websockets==14.1
+
+# Data validation and settings
+pydantic==2.10.2
+pydantic-settings==2.6.1

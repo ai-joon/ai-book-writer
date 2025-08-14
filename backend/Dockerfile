@@ -1,9 +1,10 @@
-# Build stage
+# Build stage with dependency caching optimization
 FROM python:3.12-slim AS builder
 
 WORKDIR /app
 
 # Install system dependencies for building Python packages
+# Group frequently changing packages separately for better caching
 RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
@@ -11,26 +12,38 @@ RUN apt-get update && apt-get install -y \
     libffi-dev \
     libssl-dev \
     curl \
+    git \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-# Upgrade pip and install build tools
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+# Upgrade pip and install build tools in separate layer for caching
+RUN pip install --no-cache-dir --upgrade pip==24.3.1 setuptools==75.1.0 wheel==0.44.0
 
-# Install Python dependencies
+# Copy requirements first for better layer caching
+COPY requirements.txt ./
+
+# Install dependencies and create wheels (optimized for caching)
+RUN pip wheel --no-cache-dir \
+    --wheel-dir /tmp/wheels \
+    -r requirements.txt \
+    && pip install --no-cache-dir \
+    --find-links /tmp/wheels \
+    -r requirements.txt
+
+# Copy pyproject.toml and install package in development mode (minimal impact)
 COPY pyproject.toml ./
-RUN pip install --no-cache-dir -e . \
-    && pip cache purge
+RUN pip install --no-cache-dir -e . --no-deps
 
 # Production runtime stage
 FROM python:3.12-slim AS runtime
 
 WORKDIR /app
 
-# Install minimal runtime dependencies
+# Install minimal runtime dependencies in single layer
 RUN apt-get update && apt-get install -y \
     curl \
     ca-certificates \
+    dumb-init \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
@@ -40,9 +53,12 @@ RUN groupadd -r -g 1001 appgroup && \
     mkdir -p /home/appuser && \
     chown -R appuser:appgroup /home/appuser
 
-# Copy installed packages from builder stage
-COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
-COPY --from=builder /usr/local/bin /usr/local/bin
+# Install dependencies from wheels (faster than copying site-packages)
+RUN pip install --no-cache-dir --upgrade pip==24.3.1
+COPY --from=builder /tmp/wheels /tmp/wheels
+COPY --from=builder /app/requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir --no-index --find-links /tmp/wheels -r /tmp/requirements.txt \
+    && rm -rf /tmp/wheels /tmp/requirements.txt
 
 # Copy application code with proper ownership
 COPY --chown=appuser:appgroup app ./app
@@ -72,7 +88,8 @@ EXPOSE 8000 9000
 HEALTHCHECK --interval=30s --timeout=15s --start-period=60s --retries=3 \
     CMD curl -f -X GET http://localhost:8000/healthz || exit 1
 
-# Production-optimized command with proper signal handling
+# Production-optimized command with proper signal handling using dumb-init
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 CMD ["python", "-m", "uvicorn", "app.main:app", \
      "--host", "0.0.0.0", \
      "--port", "8000", \
