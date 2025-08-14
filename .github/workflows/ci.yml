@@ -175,7 +175,7 @@ jobs:
   deploy-production:
     needs: docker-build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && github.repository_owner == 'cheesejaguar'
     environment:
       name: production
       url: https://sopher.ai
@@ -183,21 +183,37 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
+    - name: Check for GCP credentials
+      id: check-gcp
+      run: |
+        if [ -z "${{ secrets.GCP_SA_KEY }}" ]; then
+          echo "::warning::GCP_SA_KEY secret not configured. Skipping deployment."
+          echo "has_credentials=false" >> $GITHUB_OUTPUT
+          exit 0
+        else
+          echo "::notice::GCP credentials found. Proceeding with deployment."
+          echo "has_credentials=true" >> $GITHUB_OUTPUT
+        fi
+    
     - name: Authenticate to Google Cloud
+      if: steps.check-gcp.outputs.has_credentials == 'true'
       uses: google-github-actions/auth@v2
       with:
         credentials_json: ${{ secrets.GCP_SA_KEY }}
     
     - name: Set up Cloud SDK
+      if: steps.check-gcp.outputs.has_credentials == 'true'
       uses: google-github-actions/setup-gcloud@v2
     
     - name: Configure kubectl
+      if: steps.check-gcp.outputs.has_credentials == 'true'
       run: |
         gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER }} \
           --zone ${{ secrets.GKE_ZONE }} \
           --project ${{ secrets.GCP_PROJECT }}
     
     - name: Deploy to Kubernetes
+      if: steps.check-gcp.outputs.has_credentials == 'true'
       run: |
         # Update image tags
         kubectl set image deployment/sopher-api \

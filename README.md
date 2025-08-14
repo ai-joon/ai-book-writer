@@ -39,13 +39,32 @@ cd sopher.ai
 2. Set up environment variables:
 ```bash
 cp .env.example .env
-# Add your API keys to .env
+# Edit .env and add your API keys (required: ANTHROPIC_API_KEY, OPENAI_API_KEY, GOOGLE_API_KEY)
 ```
 
-3. Start services with Docker Compose:
+3. Choose your development method:
+
+#### Option A: Docker Compose (Recommended)
 ```bash
 cd infra
 docker-compose -f docker-compose.dev.yml up
+```
+Access the application at:
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8000
+- API Docs: http://localhost:8000/docs
+
+#### Option B: Local Development
+```bash
+# Terminal 1: Start Backend
+cd backend
+pip install -e .[dev]
+uvicorn app.main:app --reload --port 8000
+
+# Terminal 2: Start Frontend
+cd frontend
+npm install
+npm run dev
 ```
 
 4. Access the application:
@@ -148,15 +167,27 @@ Configure model routing in `router/litellm.config.yaml`:
 
 ### Environment Variables
 
+See `.env.example` for a complete list with descriptions. Key variables:
+
+### Required Variables
+| Variable | Description | How to Obtain |
+|----------|-------------|---------------|
+| `ANTHROPIC_API_KEY` | Claude API access | [Anthropic Console](https://console.anthropic.com/) |
+| `OPENAI_API_KEY` | OpenAI GPT models | [OpenAI Platform](https://platform.openai.com/api-keys) |
+| `GOOGLE_API_KEY` | Gemini models | [Google AI Studio](https://makersuite.google.com/app/apikey) |
+
+### Core Configuration
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `DATABASE_URL` | PostgreSQL connection string | - |
-| `REDIS_URL` | Redis connection string | redis://localhost:6379/0 |
-| `ANTHROPIC_API_KEY` | Anthropic API key | - |
-| `OPENAI_API_KEY` | OpenAI API key | - |
-| `GOOGLE_API_KEY` | Google API key | - |
-| `JWT_SECRET` | JWT signing secret | - |
-| `MONTHLY_BUDGET_USD` | Monthly cost limit | 500 |
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql+asyncpg://postgres:postgres@localhost:5432/sopherai` |
+| `REDIS_URL` | Redis connection string | `redis://localhost:6379/0` |
+| `JWT_SECRET` | JWT signing secret | `dev-secret-key-change-in-production` |
+| `MONTHLY_BUDGET_USD` | Monthly cost limit | `100` |
+| `PRIMARY_MODEL` | Main LLM model | `claude-3-5-sonnet` |
+| `LOG_LEVEL` | Logging verbosity | `INFO` |
+| `CORS_ORIGINS` | Allowed origins | `http://localhost:3000` |
+
+For production deployment, see `infra/.env.production.template` for comprehensive configuration options including GCP, monitoring, SSL, and backup settings.
 
 ## Monitoring
 
@@ -184,6 +215,16 @@ Configure model routing in `router/litellm.config.yaml`:
 3. Commit your changes
 4. Push to the branch
 5. Open a Pull Request
+
+### CI/CD Pipeline
+
+The project includes a comprehensive GitHub Actions pipeline that:
+- Runs automated tests for backend and frontend
+- Performs security scanning with Semgrep and CodeQL
+- Builds and publishes Docker images to GitHub Container Registry
+- Optionally deploys to GKE (requires secrets configuration)
+
+**For contributors**: The pipeline works without any secrets configured. Tests and builds will run successfully. See [`.github/SETUP_SECRETS.md`](.github/SETUP_SECRETS.md) for deployment configuration.
 
 ## License
 

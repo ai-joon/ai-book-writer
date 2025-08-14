@@ -112,6 +112,58 @@ Required environment variables:
 - `JWT_SECRET`: JWT signing secret
 - `MONTHLY_BUDGET_USD`: Cost limit (default: 500)
 
+## Development Setup
+
+### Quick Start with .env.example
+
+The project includes a `.env.example` file in the root directory with all necessary environment variables for local development:
+
+1. **Copy the template**: `cp .env.example .env`
+2. **Add your API keys** (required):
+   - `ANTHROPIC_API_KEY`: Get from [Anthropic Console](https://console.anthropic.com/)
+   - `OPENAI_API_KEY`: Get from [OpenAI Platform](https://platform.openai.com/api-keys)
+   - `GOOGLE_API_KEY`: Get from [Google AI Studio](https://makersuite.google.com/app/apikey)
+3. **Adjust configuration** if needed (optional):
+   - Database URL if not using localhost PostgreSQL
+   - Redis URL if not using localhost Redis
+   - Log level for debugging (`LOG_LEVEL=DEBUG`)
+4. **Generate secure secrets for production**:
+   - JWT_SECRET: `openssl rand -hex 32`
+   - FERNET_KEY: `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`
+
+### Development Workflow Options
+
+#### Docker Compose (Recommended)
+```bash
+cd infra
+docker-compose -f docker-compose.dev.yml up
+```
+- Automatically sets up PostgreSQL, Redis, and all services
+- Hot reload enabled for both frontend and backend
+- Access at http://localhost:3000
+
+#### Local Development
+```bash
+# Backend
+cd backend
+pip install -e .[dev]
+uvicorn app.main:app --reload
+
+# Frontend (separate terminal)
+cd frontend
+npm install
+npm run dev
+```
+- Requires local PostgreSQL and Redis installation
+- More control over individual services
+- Better for debugging specific components
+
+### GitHub Actions Configuration
+
+For contributors: The CI/CD pipeline runs tests and builds without requiring any secrets. Deployment steps are optional and only run for the main repository with proper GCP credentials configured.
+
+See `.github/SETUP_SECRETS.md` for setting up your own deployment pipeline.
+
 ## Important File Structure Notes
 
 ### Frontend State Management
