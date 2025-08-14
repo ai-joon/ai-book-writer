@@ -1,0 +1,130 @@
+<project name="Book-Writing MVP" owner="{{your_org}}">
+  <context>
+    Build a production-ready AI book-writing system that goes from author brief → outline → chapter drafts → edits → continuity checks → compiled manuscript.
+    Target stack: LiteLLM router (OpenAI/Anthropic/Google), CrewAI multi-agent, FastAPI (SSE + WebSocket) backend with Redis + Postgres, Next.js 14 App Router frontend with streaming, Dockerized, deployable on GKE with HPA. 
+  </context>
+
+  <business_value>
+    Reduce time-to-first-draft from weeks to hours; enable iterative revision with streaming feedback and cost controls.
+  </business_value>
+
+  <personas>
+    <author>Uploads brief, style guide, character bible; receives streamed drafts and can request revisions.</author>
+    <editor>Runs structural edits and continuity checks, sets constraints and success criteria.</editor>
+  </personas>
+
+  <inputs>
+    <brief format="markdown or txt"/>
+    <style_guide format="markdown"/>
+    <character_db format="json or csv"/>
+    <plot_seeds format="json"/>
+  </inputs>
+
+  <outputs>
+    <manuscript format="markdown and epub/pdf"/>
+    <chapters format="markdown per chapter"/>
+    <process_log format="jsonl"/>
+    <cost_report format="json"/>
+  </outputs>
+
+  <non_goals>
+    Full desktop publishing, image generation, or print layout beyond basic EPUB/PDF export.
+  </non_goals>
+
+  <acceptance_criteria>
+    <item>Streaming token output via SSE within 300ms of model first-byte for active tasks.</item>
+    <item>Outline → chapter drafts → editorial pass → continuity check produce structured JSON + Markdown artifacts.</item>
+    <item>ContinuityChecker catches name/age/voice inconsistencies with >=95% precision on provided test set.</item>
+    <item>Cost guardrail aborts tasks when budget exceeded; graceful degradation to cheaper models.</item>
+    <item>All endpoints have JSON schemas and property-based tests; 90% code coverage excluding model content.</item>
+  </acceptance_criteria>
+
+  <architecture>
+    <backend>FastAPI, EventSourceResponse (SSE), WebSocket status updates, SQLAlchemy (async), asyncpg, Redis</backend>
+    <routing>LiteLLM router with primary/secondary fallbacks, context-window overflow routing, Redis caching</routing>
+    <agents framework="CrewAI">
+      <agent name="ConceptGenerator"/>
+      <agent name="Outliner"/>
+      <agent name="Writer"/>
+      <agent name="Editor"/>
+      <agent name="ContinuityChecker"/>
+    </agents>
+    <frontend>Next.js 14 (App Router, RSC, streaming), shadcn/ui chat, Zustand store</frontend>
+    <data>Postgres with UUID PKs, JSONB metadata, indexed by (session_id, created_at)</data>
+    <observability>Prometheus custom metrics + OpenTelemetry tracing</observability>
+  </architecture>
+
+  <security>
+    <keys>Encrypted at rest (Fernet), SHA-256 hashed storage of key IDs only, per-key Redis rate limits</keys>
+    <auth>JWT (1h), refresh rotation, role-based access (author/editor/admin)</auth>
+    <hardening>Prompt input sanitization, output encoding for frontend, circuit breaker and exponential backoff on LLM calls</hardening>
+  </security>
+
+  <api>
+    <endpoint method="POST" path="/v1/projects/{project_id}/outline/stream">Start outline generation; SSE stream of tokens + JSON checkpoints.</endpoint>
+    <endpoint method="POST" path="/v1/projects/{project_id}/chapter/{n}/draft/stream">Stream chapter draft.</endpoint>
+    <endpoint method="POST" path="/v1/projects/{project_id}/chapter/{n}/edit/stream">Stream editorial pass.</endpoint>
+    <endpoint method="POST" path="/v1/projects/{project_id}/continuity/run">Run continuity checker; returns JSON report.</endpoint>
+    <endpoint method="GET"  path="/v1/projects/{project_id}/costs">Aggregated token/cost report.</endpoint>
+    <endpoint method="GET"  path="/healthz|/readyz|/livez">Health probes.</endpoint>
+    <websocket path="/ws/agents/{project_id}">Agent status updates and progress events.</websocket>
+  </api>
+
+  <db_schema>
+    <table name="projects">uuid id, text name, jsonb settings, timestamptz created_at</table>
+    <table name="sessions">uuid id, uuid project_id, text user_id, jsonb context, timestamptz created_at, index (project_id, created_at)</table>
+    <table name="events">uuid id, uuid session_id, text type, jsonb payload, timestamptz created_at, index (session_id, created_at)</table>
+    <table name="artifacts">uuid id, uuid session_id, text kind, text path, jsonb meta, bytea blob, timestamptz created_at</table>
+    <table name="costs">uuid id, uuid session_id, text agent, int prompt_tokens, int completion_tokens, numeric usd, timestamptz created_at</table>
+  </db_schema>
+
+  <model_routing>
+    <primary role="writer">anthropic/claude-3-5-sonnet</primary>
+    <secondary role="writer">openai/gpt-4o</secondary>
+    <overflow route_to="google/gemini-1.5-pro" reason="context_window_exceeded"/>
+    <cache>
+      <response ttl="3600s"/>
+      <history ttl="86400s"/>
+    </cache>
+    <budgets monthly_usd_limit="{{budget}}">
+      <alloc agent="Writer" pct="0.60"/>
+      <alloc agent="Editor" pct="0.25"/>
+      <alloc agent="Researcher" pct="0.15"/>
+    </budgets>
+  </model_routing>
+
+  <testing>
+    <unit>Mock LLM; validate response shapes and constraints (token limits, markers).</unit>
+    <property>Hypothesis tests: JSON schema adherence; no missing chapter numbers; monotonic timelines.</property>
+    <integration>Use real LLMs on dev keys; assert streaming works end-to-end.</integration>
+    <coverage target="90%" exclude="raw LLM text"/>
+  </testing>
+
+  <workflow pattern="Explore-Plan-Code-Commit">
+    <explore>
+      Restate goals; list assumptions and open questions; identify risks (cost, latency, context drift).
+    </explore>
+    <plan>
+      Propose repo tree; enumerate milestones; define API contracts and DB schema; write test plan first.
+    </plan>
+    <code>
+      Implement in small, atomic changes; generate files with proper paths; include docstrings and type hints; add tests before endpoints.
+    </code>
+    <commit>
+      Use conventional commits; include cost/latency notes in commit trailer; summarize artifacts produced.
+    </commit>
+  </workflow>
+
+  <house_rules>
+    <rule>Prefer working, minimal code over stubs; no pseudo-code.</rule>
+    <rule>Stream tokens as they arrive; send JSON checkpoints every ~50–100 tokens.</rule>
+    <rule>Emit file diffs with clear paths; keep functions under 60 lines.</rule>
+    <rule>If a step is ambiguous, choose the simplest correct option and proceed.</rule>
+  </house_rules>
+
+  <success_criteria>
+    <metric name="p95_inference_seconds" target="<=10"/>
+    <metric name="gpu_utilization_pct" target="<=95"/>
+    <metric name="cost_overrun_events" target="0/month"/>
+  </success_criteria>
+</project>
