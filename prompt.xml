@@ -1,4 +1,4 @@
-<project name="Book-Writing MVP" owner="{{your_org}}">
+<project name="sopher.ai" owner=cheesejaguar>
   <context>
     Build a production-ready AI book-writing system that goes from author brief → outline → chapter drafts → edits → continuity checks → compiled manuscript.
     Target stack: LiteLLM router (OpenAI/Anthropic/Google), CrewAI multi-agent, FastAPI (SSE + WebSocket) backend with Redis + Postgres, Next.js 14 App Router frontend with streaming, Dockerized, deployable on GKE with HPA. 
@@ -86,7 +86,7 @@
       <response ttl="3600s"/>
       <history ttl="86400s"/>
     </cache>
-    <budgets monthly_usd_limit="{{budget}}">
+    <budgets monthly_usd_limit="USER_CONFIGURABLE">
       <alloc agent="Writer" pct="0.60"/>
       <alloc agent="Editor" pct="0.25"/>
       <alloc agent="Researcher" pct="0.15"/>
@@ -122,9 +122,12 @@
     <rule>If a step is ambiguous, choose the simplest correct option and proceed.</rule>
   </house_rules>
 
-  <success_criteria>
-    <metric name="p95_inference_seconds" target="<=10"/>
-    <metric name="gpu_utilization_pct" target="<=95"/>
-    <metric name="cost_overrun_events" target="0/month"/>
-  </success_criteria>
+  <ACCEPTANCE_CRITERIA>
+    1) Start a session, choose pipeline, paste prompt → live outline within 10s, chapter draft streaming within 20s.
+    2) Non‑fiction: at least 3 citations/claims per chapter with footnotes + bibliography.
+    3) Fiction: character bible + timeline JSON exported; continuity checker flags inconsistencies.
+    4) Safety: no disallowed content; MPA rating attached.
+    5) Cost meter visible, total cost per book recorded in DB.
+    6) All tests green in CI; containers pass Trivy; HPA scales under load.
+  </ACCEPTANCE_CRITERIA>
 </project>
