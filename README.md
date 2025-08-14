@@ -1,8 +1,8 @@
-# sopher.ai
+# sopher.ai ✍️📚
 
 Production-ready AI book-writing system that transforms author briefs into complete manuscripts with real-time streaming, multi-agent collaboration, and comprehensive cost controls.
 
-## Features
+## Features ✨
 
 - **Real-time Streaming**: SSE-based token streaming with sub-300ms latency
 - **Multi-Agent System**: 5 specialized CrewAI agents (Concept, Outline, Writer, Editor, Continuity)
@@ -11,7 +11,7 @@ Production-ready AI book-writing system that transforms author briefs into compl
 - **Continuity Checking**: Automated consistency verification across chapters
 - **Production Ready**: Dockerized, Kubernetes-ready with HPA, monitoring, and CI/CD
 
-## Tech Stack
+## Tech Stack 🧰
 
 - **Backend**: FastAPI, SQLAlchemy (async), PostgreSQL, Redis
 - **AI/ML**: LiteLLM, CrewAI, Claude 3.5 Sonnet, GPT-4o, Gemini 1.5 Pro
@@ -19,7 +19,7 @@ Production-ready AI book-writing system that transforms author briefs into compl
 - **Infrastructure**: Docker, Kubernetes (GKE), Prometheus, Grafana
 - **CI/CD**: GitHub Actions, automated testing, security scanning
 
-## Quick Start
+## Quick Start 🚀
 
 ### Prerequisites
 
@@ -28,7 +28,7 @@ Production-ready AI book-writing system that transforms author briefs into compl
 - Docker & Docker Compose
 - API Keys: Anthropic, OpenAI, Google (for LLMs)
 
-### Local Development
+### Local Development 🛠️
 
 1. Clone the repository:
 ```bash
@@ -73,7 +73,7 @@ npm run dev
 - Prometheus: http://localhost:9090
 - Grafana: http://localhost:3001 (admin/admin)
 
-## API Endpoints
+## API Endpoints 🔌
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
@@ -84,7 +84,7 @@ npm run dev
 | `/api/v1/projects/{id}/costs` | GET | Get cost report |
 | `/ws/agents/{id}` | WebSocket | Real-time agent status updates |
 
-## Architecture
+## Architecture 🏗️
 
 ```
 ┌─────────────┐     ┌──────────────┐     ┌─────────────┐
@@ -98,7 +98,7 @@ npm run dev
                     └─────────────┘      └─────────────┘
 ```
 
-## Development
+## Development 🧪
 
 ### Backend Development
 
@@ -116,7 +116,7 @@ npm install
 npm run dev
 ```
 
-### Running Tests
+### Running Tests ✅
 
 ```bash
 # Backend tests
@@ -129,7 +129,7 @@ npm run test
 npm run type-check
 ```
 
-## Deployment
+## Deployment 🚢
 
 ### Deploy to Kubernetes (GKE)
 
@@ -155,7 +155,7 @@ kubectl create secret generic sopher-ai-secrets \
   -n sopher-ai
 ```
 
-## Configuration
+## Configuration ⚙️
 
 ### LiteLLM Router
 
@@ -189,7 +189,7 @@ See `.env.example` for a complete list with descriptions. Key variables:
 
 For production deployment, see `infra/.env.production.template` for comprehensive configuration options including GCP, monitoring, SSL, and backup settings.
 
-## Monitoring
+## Monitoring 📈
 
 - **Metrics**: Prometheus metrics at `/api/metrics`
 - **Health Checks**: `/healthz`, `/readyz`, `/livez`
@@ -199,7 +199,7 @@ For production deployment, see `infra/.env.production.template` for comprehensiv
   - `llm_cost_usd_total`: Cost tracking
   - `active_sessions`: Concurrent writing sessions
 
-## Security
+## Security 🔐
 
 - JWT authentication with 1-hour expiry
 - API key encryption with Fernet
@@ -208,7 +208,7 @@ For production deployment, see `infra/.env.production.template` for comprehensiv
 - Circuit breaker for LLM calls
 - Kubernetes network policies
 
-## Contributing
+## Contributing 🤝
 
 1. Fork the repository
 2. Create a feature branch
@@ -216,7 +216,7 @@ For production deployment, see `infra/.env.production.template` for comprehensiv
 4. Push to the branch
 5. Open a Pull Request
 
-### CI/CD Pipeline
+### CI/CD Pipeline 🔄
 
 The project includes a comprehensive GitHub Actions pipeline that:
 - Runs automated tests for backend and frontend
@@ -226,6 +226,6 @@ The project includes a comprehensive GitHub Actions pipeline that:
 
 **For contributors**: The pipeline works without any secrets configured. Tests and builds will run successfully. See [`.github/SETUP_SECRETS.md`](.github/SETUP_SECRETS.md) for deployment configuration.
 
-## License
+## License 📄
 
 MIT License - see [LICENSE](LICENSE) file
