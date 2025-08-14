@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useStore } from '@/lib/zustand'
-import { BookOpen, Send, Loader2, DollarSign, Zap, ChevronRight } from 'lucide-react'
+import { BookOpen, Loader2, DollarSign, Zap } from 'lucide-react'
 
 export default function Home() {
   const [brief, setBrief] = useState('')
