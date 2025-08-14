@@ -31,7 +31,7 @@ cd backend
 pip install -e .[dev]                    # Install with dev dependencies
 uvicorn app.main:app --reload            # Run development server
 pytest tests/ -v --cov=app              # Run tests with coverage
-pytest tests/test_specific.py::TestName  # Run single test
+pytest tests/test_api_contract.py::test_health_endpoint  # Run single test
 black app tests                          # Format code
 ruff check app tests                     # Lint code  
 mypy app                                 # Type check
@@ -44,8 +44,21 @@ cd frontend
 npm install                              # Install dependencies
 npm run dev                              # Run development server
 npm run build                            # Build for production
-npm run lint                             # Lint code
-npm run type-check                       # TypeScript type checking
+npm run lint                             # Lint code (ESLint with Next.js rules)
+npm run type-check                       # TypeScript strict mode checking
+```
+
+### Quality Assurance Commands
+
+```bash
+# Backend: Run all quality checks
+cd backend && black app tests && ruff check app tests && mypy app && pytest tests/ -v
+
+# Frontend: Run all quality checks  
+cd frontend && npm run lint && npm run type-check && npm run build
+
+# Full stack verification
+cd backend && pytest tests/ -v && cd ../frontend && npm run type-check
 ```
 
 ### Docker Development
@@ -99,12 +112,39 @@ Required environment variables:
 - `JWT_SECRET`: JWT signing secret
 - `MONTHLY_BUDGET_USD`: Cost limit (default: 500)
 
+## Important File Structure Notes
+
+### Frontend State Management
+- `frontend/lib/zustand.ts`: Global state store with TypeScript interfaces (Message, Chapter, Project, AppState)
+- Uses persistence middleware for auth tokens and project data
+- Import with: `import { useStore } from '@/lib/zustand'` (path alias configured in tsconfig.json)
+
+### Backend Agent System
+- `backend/app/agents/agents.py`: BookWritingAgents class with 5 specialized CrewAI agents
+- Each agent has specific role, goal, and backstory for optimal performance
+- Async methods: `generate_concepts()`, `create_outline()`, `write_chapter()`, `edit_chapter()`, `check_continuity()`
+
+### Database Schema
+- All tables use UUID primary keys with postgresql JSONB for metadata storage
+- Indexed on (session_id, created_at) for performance
+- SQLAlchemy async models with proper relationships and cascading deletes
+
 ## Testing Strategy
 
 - **Unit Tests**: Mock LLM responses, validate schemas and business logic
 - **Property Tests**: Use Hypothesis for schema validation and edge cases
-- **API Tests**: Contract testing with mocked authentication
+- **API Tests**: Contract testing with mocked authentication (13/15 tests currently passing)
 - **Coverage**: Target 90% excluding raw LLM content
+
+### Known Test Status
+- `test_outline_stream_contract` and `test_cost_tracking` are skipped due to complex SQLAlchemy model mocking
+- All health endpoints, validation, rate limiting, and schema tests pass
+- Frontend has no test suite yet - uses TypeScript strict mode and ESLint for quality assurance
+
+### Code Quality Tools Configuration
+- **Backend**: Black (100 char line length), Ruff (E,F,I,N,W rules), MyPy (strict)
+- **Frontend**: ESLint (Next.js core-web-vitals), TypeScript strict mode, no explicit Prettier
+- **Path mapping**: Frontend uses `@/*` alias for imports (configured in tsconfig.json)
 
 ## Deployment Notes
 
@@ -115,3 +155,16 @@ The system is containerized and Kubernetes-ready:
 - Rolling deployments with zero downtime
 
 When modifying streaming endpoints, ensure proper cleanup of SSE connections and background tasks to prevent memory leaks.
+
+## CI/CD Configuration
+
+GitHub Actions workflow (`.github/workflows/ci.yml`) includes:
+- **Security Scanning**: CodeQL analysis with matrix strategy for Python and JavaScript-TypeScript
+- **Quality Gates**: Backend linting (ruff, black, mypy), frontend linting (ESLint, TypeScript)
+- **Testing**: Automated test execution with proper dependency installation
+- **Docker**: Automated image building and security scanning
+
+### Common Issues and Solutions
+- **TypeScript Path Resolution**: Remove explicit `baseUrl` from tsconfig.json - Next.js 14 App Router handles path resolution internally
+- **Ruff Line Length**: Use multi-line string formatting for long pytest.mark.skip decorators
+- **CodeQL**: Ensure proper init/autobuild/analyze sequence with correct language parameters
