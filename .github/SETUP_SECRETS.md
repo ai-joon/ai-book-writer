@@ -14,14 +14,22 @@ The pipeline is designed to run tests and build Docker images without any secret
 ### Optional Secrets for Full Pipeline
 
 #### 1. Google Cloud Platform (GCP) Deployment
-If you want to deploy to GCP/GKE, configure these secrets:
+If you want to deploy to GCP/GKE, you need to create a service account with proper permissions.
 
+**Quick Setup**: Use our automated script:
+```bash
+./scripts/setup-gcp-service-account.sh
+```
+
+**Manual Setup**: See [`docs/GCP_SETUP.md`](../docs/GCP_SETUP.md) for detailed instructions.
+
+**Required GitHub Secrets**:
 | Secret Name | Description | How to Obtain |
 |-------------|-------------|---------------|
-| `GCP_SA_KEY` | Service account JSON key | 1. Go to [GCP Console](https://console.cloud.google.com/iam-admin/serviceaccounts)<br>2. Create/select a service account<br>3. Create key (JSON format)<br>4. Copy entire JSON content |
+| `GCP_SA_KEY` | Service account JSON key | Complete output from service account key creation |
 | `GKE_CLUSTER` | Kubernetes cluster name | Example: `sopher-ai-cluster` |
 | `GKE_ZONE` | GCP zone | Example: `us-central1-a` |
-| `GCP_PROJECT` | GCP project ID | Found in GCP Console (e.g., `my-project-123456`) |
+| `GCP_PROJECT` | GCP project ID | Your GCP project ID (e.g., `my-project-123456`) |
 
 #### 2. API Keys for Integration Tests (Optional)
 These are only needed if you want to run integration tests with real LLM APIs:
