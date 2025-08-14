@@ -229,14 +229,30 @@ jobs:
     permissions:
       security-events: write
       contents: read
+      actions: read
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ['python', 'javascript-typescript']
     
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
     
-    - name: Run CodeQL Analysis
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: ${{ matrix.language }}
+        queries: security-extended,security-and-quality
+    
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v3
+    
+    - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
       with:
-        languages: python, javascript
+        category: "/language:${{ matrix.language }}"
     
     - name: Run Semgrep
       uses: returntocorp/semgrep-action@v1

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useStore } from '@/lib/zustand'
+import type { Message, AppState } from '@/lib/zustand'
 import { BookOpen, Loader2, DollarSign, Zap } from 'lucide-react'
 
 export default function Home() {
@@ -10,14 +11,14 @@ export default function Home() {
   const [targetChapters, setTargetChapters] = useState(10)
   const [streamedContent, setStreamedContent] = useState('')
   
-  const messages = useStore((s) => s.messages)
-  const addMessage = useStore((s) => s.addMessage)
-  const isGenerating = useStore((s) => s.isGenerating)
-  const setGenerating = useStore((s) => s.setGenerating)
-  const progress = useStore((s) => s.progress)
-  const setProgress = useStore((s) => s.setProgress)
-  const totalCost = useStore((s) => s.totalCost)
-  const incrementCost = useStore((s) => s.incrementCost)
+  const messages = useStore((state: AppState) => state.messages)
+  const addMessage = useStore((state: AppState) => state.addMessage)
+  const isGenerating = useStore((state: AppState) => state.isGenerating)
+  const setGenerating = useStore((state: AppState) => state.setGenerating)
+  const progress = useStore((state: AppState) => state.progress)
+  const setProgress = useStore((state: AppState) => state.setProgress)
+  const totalCost = useStore((state: AppState) => state.totalCost)
+  const incrementCost = useStore((state: AppState) => state.incrementCost)
   
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -250,7 +251,7 @@ export default function Home() {
               <h2 className="text-xl font-semibold mb-4">Generated Content</h2>
               
               <div className="flex-1 overflow-y-auto space-y-4 px-2">
-                {messages.map((message) => (
+                {messages.map((message: Message) => (
                   <div
                     key={message.id}
                     className={`${

@@ -105,7 +105,11 @@ async def test_outline_request_validation(async_client: AsyncClient, mock_token)
     assert response.status_code == 422
 
 
-@pytest.mark.skip(reason="Complex integration test - SSE endpoint works but mocking SQLAlchemy models is complex")
+@pytest.mark.skip(
+    reason=(
+        "Complex integration test - SSE endpoint works but " "mocking SQLAlchemy models is complex"
+    )
+)
 @pytest.mark.asyncio
 async def test_outline_stream_contract(async_client: AsyncClient, mock_token):
     """Test outline streaming endpoint contract"""
@@ -158,7 +162,11 @@ async def test_outline_stream_contract(async_client: AsyncClient, mock_token):
             assert "text/event-stream" in response.headers.get("content-type", "")
 
 
-@pytest.mark.skip(reason="Complex integration test - cost tracking works but mocking SQLAlchemy models is complex")
+@pytest.mark.skip(
+    reason=(
+        "Complex integration test - cost tracking works but " "mocking SQLAlchemy models is complex"
+    )
+)
 @pytest.mark.asyncio
 async def test_cost_tracking(async_client: AsyncClient, mock_token):
     """Test that costs are tracked properly"""
