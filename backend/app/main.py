@@ -20,7 +20,7 @@ from .security import create_access_token
 # Configure logging
 logging.basicConfig(
     level=os.getenv("LOG_LEVEL", "INFO"),
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ litellm.cache = litellm.Cache(
     type="redis",
     host=os.getenv("REDIS_HOST", "localhost"),
     port=int(os.getenv("REDIS_PORT", "6379")),
-    db=int(os.getenv("REDIS_DB", "0"))
+    db=int(os.getenv("REDIS_DB", "0")),
 )
 litellm.success_callback = ["prometheus"]
 litellm.failure_callback = ["prometheus"]
@@ -79,13 +79,11 @@ app.add_middleware(
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     """Handle validation errors"""
     MetricsTracker.track_api_request(
-        method=request.method,
-        endpoint=request.url.path,
-        status_code=422
+        method=request.method, endpoint=request.url.path, status_code=422
     )
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content={"detail": exc.errors(), "body": exc.body}
+        content={"detail": exc.errors(), "body": exc.body},
     )
 
 
@@ -93,14 +91,9 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     """Handle HTTP exceptions"""
     MetricsTracker.track_api_request(
-        method=request.method,
-        endpoint=request.url.path,
-        status_code=exc.status_code
+        method=request.method, endpoint=request.url.path, status_code=exc.status_code
     )
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"detail": exc.detail}
-    )
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
 
 
 # Health check endpoints
@@ -121,7 +114,7 @@ async def readiness_check():
         logger.error(f"Readiness check failed: {e}")
         return JSONResponse(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            content={"status": "not ready", "error": str(e)}
+            content={"status": "not ready", "error": str(e)},
         )
 
 
@@ -138,14 +131,10 @@ async def get_demo_token():
     token_data = {
         "user_id": "demo-user",
         "project_id": "00000000-0000-0000-0000-000000000000",
-        "role": "author"
+        "role": "author",
     }
     access_token = create_access_token(token_data)
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "expires_in": 3600
-    }
+    return {"access_token": access_token, "token_type": "bearer", "expires_in": 3600}
 
 
 # Include routers
@@ -163,7 +152,7 @@ async def root():
         "description": "AI-powered book writing system",
         "docs": "/docs",
         "health": "/healthz",
-        "metrics": "/api/metrics"
+        "metrics": "/api/metrics",
     }
 
 
@@ -172,6 +161,7 @@ async def root():
 async def track_requests(request: Request, call_next):
     """Track all HTTP requests"""
     import time
+
     start_time = time.perf_counter()
 
     response = await call_next(request)
@@ -182,9 +172,7 @@ async def track_requests(request: Request, call_next):
     # Track metrics for successful requests
     if response.status_code < 400:
         MetricsTracker.track_api_request(
-            method=request.method,
-            endpoint=request.url.path,
-            status_code=response.status_code
+            method=request.method, endpoint=request.url.path, status_code=response.status_code
         )
 
     return response

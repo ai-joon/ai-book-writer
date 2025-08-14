@@ -43,12 +43,7 @@ class RedisCache:
                 return value
         return None
 
-    async def set(
-        self,
-        key: str,
-        value: Any,
-        ttl: Optional[int] = 3600
-    ) -> None:
+    async def set(self, key: str, value: Any, ttl: Optional[int] = 3600) -> None:
         """Set value in cache with optional TTL"""
         if not self.redis:
             return
@@ -66,12 +61,7 @@ class RedisCache:
         if self.redis:
             await self.redis.delete(key)
 
-    async def increment(
-        self,
-        key: str,
-        amount: int = 1,
-        ttl: Optional[int] = None
-    ) -> int:
+    async def increment(self, key: str, amount: int = 1, ttl: Optional[int] = None) -> int:
         """Increment counter, useful for rate limiting"""
         if not self.redis:
             return 0
@@ -79,13 +69,14 @@ class RedisCache:
         value = await self.redis.incrby(key, amount)
         if ttl and value == amount:  # First increment
             await self.redis.expire(key, ttl)
-        return value
+        return int(value)
 
     async def get_ttl(self, key: str) -> int:
         """Get TTL for a key"""
         if not self.redis:
             return -1
-        return await self.redis.ttl(key)
+        result = await self.redis.ttl(key)
+        return int(result)
 
     def cache_key(self, prefix: str, *args) -> str:
         """Generate cache key from prefix and arguments"""

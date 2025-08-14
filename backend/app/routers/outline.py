@@ -28,7 +28,7 @@ async def event_generator(
     outline_request: OutlineRequest,
     session: Session,
     db: AsyncSession,
-    user: TokenData
+    user: TokenData,
 ) -> AsyncIterator[dict]:
     """Generate SSE events for outline streaming"""
 
@@ -40,9 +40,7 @@ async def event_generator(
     try:
         # Check cache
         cache_key = cache.cache_key(
-            "outline",
-            str(project_id),
-            hashlib.md5(outline_request.brief.encode()).hexdigest()
+            "outline", str(project_id), hashlib.md5(outline_request.brief.encode()).hexdigest()
         )
 
         cached_result = await cache.get(cache_key)
@@ -50,12 +48,9 @@ async def event_generator(
             MetricsTracker.track_cache(hit=True, cache_type="outline")
             yield {
                 "event": "checkpoint",
-                "data": json.dumps({"source": "cache", "content": cached_result})
+                "data": json.dumps({"source": "cache", "content": cached_result}),
             }
-            yield {
-                "event": "complete",
-                "data": json.dumps({"cached": True, "tokens": 0})
-            }
+            yield {"event": "complete", "data": json.dumps({"cached": True, "tokens": 0})}
             return
 
         MetricsTracker.track_cache(hit=False, cache_type="outline")
@@ -66,17 +61,14 @@ async def event_generator(
         # First, generate concepts
         yield {
             "event": "checkpoint",
-            "data": json.dumps({"stage": "generating_concepts", "progress": 0.1})
+            "data": json.dumps({"stage": "generating_concepts", "progress": 0.1}),
         }
 
-        concepts = await agents.generate_concepts(
-            brief=outline_request.brief,
-            plot_seeds=None
-        )
+        concepts = await agents.generate_concepts(brief=outline_request.brief, plot_seeds=None)
 
         yield {
             "event": "checkpoint",
-            "data": json.dumps({"stage": "concepts_complete", "progress": 0.3})
+            "data": json.dumps({"stage": "concepts_complete", "progress": 0.3}),
         }
 
         # Stream outline generation
@@ -94,7 +86,7 @@ Concepts: {json.dumps(concepts)}
 
 Provide a comprehensive outline with:
 1. Book title and subtitle
-2. Target audience and themes  
+2. Target audience and themes
 3. Chapter-by-chapter breakdown including:
    - Chapter number and title
    - Key events and plot points
@@ -112,7 +104,7 @@ Format as structured markdown."""
                 messages=[{"role": "user", "content": prompt}],
                 stream=True,
                 max_tokens=4096,
-                temperature=0.7
+                temperature=0.7,
             )
 
             buffer = []
@@ -131,10 +123,7 @@ Format as structured markdown."""
                     buffer.append(content)
 
                     # Send token event
-                    yield {
-                        "event": "token",
-                        "data": content
-                    }
+                    yield {"event": "token", "data": content}
 
                     # Send checkpoint every 100 tokens
                     if tokens_emitted % 100 == 0:
@@ -142,12 +131,14 @@ Format as structured markdown."""
                         progress = min(0.3 + (tokens_emitted / 4000) * 0.6, 0.9)
                         yield {
                             "event": "checkpoint",
-                            "data": json.dumps({
-                                "checkpoint": checkpoint_counter,
-                                "tokens": tokens_emitted,
-                                "progress": progress,
-                                "preview": "".join(buffer[-500:])
-                            })
+                            "data": json.dumps(
+                                {
+                                    "checkpoint": checkpoint_counter,
+                                    "tokens": tokens_emitted,
+                                    "progress": progress,
+                                    "preview": "".join(buffer[-500:]),
+                                }
+                            ),
                         }
 
                 # Get usage info if available
@@ -161,16 +152,15 @@ Format as structured markdown."""
                         model=model,
                         agent="outliner",
                         prompt_tokens=prompt_tokens,
-                        completion_tokens=completion_tokens
+                        completion_tokens=completion_tokens,
                     )
 
                     # Calculate cost (example rates)
                     cost_per_1k_prompt = 0.003
                     cost_per_1k_completion = 0.015
-                    total_cost = (
-                        (prompt_tokens / 1000) * cost_per_1k_prompt +
-                        (completion_tokens / 1000) * cost_per_1k_completion
-                    )
+                    total_cost = (prompt_tokens / 1000) * cost_per_1k_prompt + (
+                        completion_tokens / 1000
+                    ) * cost_per_1k_completion
 
                     MetricsTracker.track_cost(model, "outliner", total_cost)
 
@@ -181,7 +171,7 @@ Format as structured markdown."""
                         model=model,
                         prompt_tokens=prompt_tokens,
                         completion_tokens=completion_tokens,
-                        usd=total_cost
+                        usd=total_cost,
                     )
                     db.add(cost_record)
 
@@ -198,9 +188,9 @@ Format as structured markdown."""
             meta={
                 "brief": outline_request.brief,
                 "chapters": outline_request.target_chapters,
-                "tokens": tokens_emitted
+                "tokens": tokens_emitted,
             },
-            blob=final_outline.encode()
+            blob=final_outline.encode(),
         )
         db.add(artifact)
 
@@ -211,8 +201,8 @@ Format as structured markdown."""
             payload={
                 "tokens": tokens_emitted,
                 "duration": time.perf_counter() - start_time,
-                "model": model
-            }
+                "model": model,
+            },
         )
         db.add(event)
 
@@ -221,19 +211,18 @@ Format as structured markdown."""
         # Send completion event
         yield {
             "event": "complete",
-            "data": json.dumps({
-                "tokens": tokens_emitted,
-                "duration": time.perf_counter() - start_time,
-                "outline_id": str(artifact.id)
-            })
+            "data": json.dumps(
+                {
+                    "tokens": tokens_emitted,
+                    "duration": time.perf_counter() - start_time,
+                    "outline_id": str(artifact.id),
+                }
+            ),
         }
 
     except Exception as e:
         MetricsTracker.track_model_error(model, type(e).__name__)
-        yield {
-            "event": "error",
-            "data": json.dumps({"error": str(e)})
-        }
+        yield {"event": "error", "data": json.dumps({"error": str(e)})}
     finally:
         active_sessions.dec()
 
@@ -245,7 +234,7 @@ async def stream_outline(
     outline_request: OutlineRequest,
     db: AsyncSession = Depends(get_db),
     user: TokenData = Depends(get_current_user),
-    background_tasks: BackgroundTasks = BackgroundTasks()
+    background_tasks: BackgroundTasks = BackgroundTasks(),
 ) -> EventSourceResponse:
     """Stream outline generation via Server-Sent Events"""
 
@@ -257,8 +246,8 @@ async def stream_outline(
             "brief": outline_request.brief,
             "style_guide": outline_request.style_guide,
             "genre": outline_request.genre,
-            "target_chapters": outline_request.target_chapters
-        }
+            "target_chapters": outline_request.target_chapters,
+        },
     )
     db.add(session)
     await db.commit()
@@ -274,11 +263,11 @@ async def stream_outline(
             outline_request=outline_request,
             session=session,
             db=db,
-            user=user
+            user=user,
         ),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
             "X-Accel-Buffering": "no",  # Disable Nginx buffering
-        }
+        },
     )

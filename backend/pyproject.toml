@@ -23,6 +23,7 @@ dependencies = [
     "websockets>=12.0",
     "tenacity>=8.3.0",
     "alembic>=1.13.0",
+    "passlib[bcrypt]>=1.7.4",
 ]
 
 [project.optional-dependencies]
@@ -48,6 +49,8 @@ target-version = ['py312']
 [tool.ruff]
 line-length = 100
 target-version = "py312"
+
+[tool.ruff.lint]
 select = ["E", "F", "I", "N", "W"]
 
 [tool.mypy]

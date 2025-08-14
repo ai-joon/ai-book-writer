@@ -14,8 +14,7 @@ from sqlalchemy.pool import NullPool
 from .models import Base
 
 DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql+asyncpg://postgres:postgres@localhost:5432/sopherai"
+    "DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5432/sopherai"
 )
 
 # Create async engine

@@ -5,14 +5,17 @@ from uuid import uuid4
 from sqlalchemy import Column, DateTime, ForeignKey, Index, Integer, LargeBinary, Numeric, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.orm import DeclarativeBase, relationship
 from sqlalchemy.sql import func
 
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    pass
 
 
 class Project(Base):
     """Project represents a book writing project"""
+
     __tablename__ = "projects"
 
     id = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -26,6 +29,7 @@ class Project(Base):
 
 class Session(Base):
     """Session represents a writing session within a project"""
+
     __tablename__ = "sessions"
 
     id = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -39,13 +43,12 @@ class Session(Base):
     artifacts = relationship("Artifact", back_populates="session", cascade="all, delete-orphan")
     costs = relationship("Cost", back_populates="session", cascade="all, delete-orphan")
 
-    __table_args__ = (
-        Index("idx_session_project_created", "project_id", "created_at"),
-    )
+    __table_args__ = (Index("idx_session_project_created", "project_id", "created_at"),)
 
 
 class Event(Base):
     """Event represents an action or state change in the system"""
+
     __tablename__ = "events"
 
     id = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -56,13 +59,12 @@ class Event(Base):
 
     session = relationship("Session", back_populates="events")
 
-    __table_args__ = (
-        Index("idx_event_session_created", "session_id", "created_at"),
-    )
+    __table_args__ = (Index("idx_event_session_created", "session_id", "created_at"),)
 
 
 class Artifact(Base):
     """Artifact represents generated content (outlines, chapters, etc.)"""
+
     __tablename__ = "artifacts"
 
     id = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -75,13 +77,12 @@ class Artifact(Base):
 
     session = relationship("Session", back_populates="artifacts")
 
-    __table_args__ = (
-        Index("idx_artifact_session_kind", "session_id", "kind"),
-    )
+    __table_args__ = (Index("idx_artifact_session_kind", "session_id", "kind"),)
 
 
 class Cost(Base):
     """Cost tracks token usage and costs per agent/session"""
+
     __tablename__ = "costs"
 
     id = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)

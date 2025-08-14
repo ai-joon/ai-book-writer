@@ -30,12 +30,9 @@ security = HTTPBearer()
 
 class TokenData:
     """Token payload data"""
+
     def __init__(
-        self,
-        user_id: str,
-        project_id: Optional[str] = None,
-        role: str = "author",
-        **kwargs
+        self, user_id: str, project_id: Optional[str] = None, role: str = "author", **kwargs
     ):
         self.user_id = user_id
         self.project_id = project_id
@@ -43,10 +40,7 @@ class TokenData:
         self.extra = kwargs
 
 
-def create_access_token(
-    data: Dict[str, Any],
-    expires_delta: Optional[timedelta] = None
-) -> str:
+def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta] = None) -> str:
     """Create JWT access token"""
     to_encode = data.copy()
     if expires_delta:
@@ -55,7 +49,7 @@ def create_access_token(
         expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
 
     to_encode.update({"exp": expire, "type": "access"})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return str(jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM))
 
 
 def create_refresh_token(data: Dict[str, Any]) -> str:
@@ -63,7 +57,7 @@ def create_refresh_token(data: Dict[str, Any]) -> str:
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
     to_encode.update({"exp": expire, "type": "refresh"})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return str(jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM))
 
 
 def verify_token(token: str, token_type: str = "access") -> TokenData:
@@ -73,21 +67,19 @@ def verify_token(token: str, token_type: str = "access") -> TokenData:
 
         if payload.get("type") != token_type:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token type"
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token type"
             )
 
         user_id: str = payload.get("user_id")
         if user_id is None:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token payload"
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload"
             )
 
         return TokenData(
             user_id=user_id,
             project_id=payload.get("project_id"),
-            role=payload.get("role", "author")
+            role=payload.get("role", "author"),
         )
     except JWTError:
         raise HTTPException(
@@ -98,32 +90,27 @@ def verify_token(token: str, token_type: str = "access") -> TokenData:
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security)
+    credentials: HTTPAuthorizationCredentials = Depends(security),
 ) -> TokenData:
     """Get current user from JWT token"""
     return verify_token(credentials.credentials)
 
 
-async def get_current_admin(
-    current_user: TokenData = Depends(get_current_user)
-) -> TokenData:
+async def get_current_admin(current_user: TokenData = Depends(get_current_user)) -> TokenData:
     """Verify user has admin role"""
     if current_user.role != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin access required"
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
     return current_user
 
 
 def encrypt_api_key(api_key: str) -> str:
     """Encrypt API key for storage"""
-    return fernet.encrypt(api_key.encode()).decode()
+    return str(fernet.encrypt(api_key.encode()).decode())
 
 
 def decrypt_api_key(encrypted_key: str) -> str:
     """Decrypt API key for use"""
-    return fernet.decrypt(encrypted_key.encode()).decode()
+    return str(fernet.decrypt(encrypted_key.encode()).decode())
 
 
 def hash_api_key_id(api_key: str) -> str:
@@ -138,11 +125,7 @@ class RateLimiter:
         self.requests = requests
         self.window = window
 
-    async def check_rate_limit(
-        self,
-        key: str,
-        cache_client
-    ) -> bool:
+    async def check_rate_limit(self, key: str, cache_client) -> bool:
         """Check if rate limit exceeded"""
         from .cache import cache
 
