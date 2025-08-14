@@ -13,20 +13,20 @@ redis==5.2.0
 
 # Security and authentication
 python-jose[cryptography]==3.3.0
-cryptography==43.0.3
+cryptography==44.0.1
 passlib[bcrypt]==1.7.4
 
 # Monitoring and metrics
 prometheus-client==0.21.0
 
 # AI and LLM integration
-litellm==1.52.15
+litellm==1.61.15
 crewai==0.80.0
 
 # HTTP client and utilities
 httpx==0.28.0
 tenacity==9.0.0
-python-multipart==0.0.17
+python-multipart==0.0.18
 websockets==14.1
 
 # Data validation and settings
