@@ -3,13 +3,13 @@
 import logging
 import os
 from contextlib import asynccontextmanager
-from typing import Literal
 
 import litellm
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from litellm.types.caching import LiteLLMCacheType
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .cache import cache
@@ -26,7 +26,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Configure LiteLLM
-cache_type: Literal["redis"] = "redis"
+cache_type: LiteLLMCacheType = LiteLLMCacheType.REDIS
 litellm.cache = litellm.Cache(
     type=cache_type,
     host=os.getenv("REDIS_HOST", "localhost"),
