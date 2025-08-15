@@ -52,7 +52,7 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       GOOGLE_API_KEY: ${GOOGLE_API_KEY}
-      PRIMARY_MODEL: claude-3-5-sonnet
+      PRIMARY_MODEL: gpt-5
       CORS_ORIGINS: "http://localhost:3000,http://frontend:3000"
       LOG_LEVEL: INFO
     ports:

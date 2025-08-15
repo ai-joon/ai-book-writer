@@ -35,12 +35,15 @@ async def event_generator(
     active_sessions.inc()
     start_time = time.perf_counter()
     tokens_emitted = 0
-    model = "claude-3-5-sonnet"
+    model = outline_request.model
 
     try:
         # Check cache
         cache_key = cache.cache_key(
-            "outline", str(project_id), hashlib.md5(outline_request.brief.encode()).hexdigest()
+            "outline",
+            str(project_id),
+            outline_request.model,
+            hashlib.md5(outline_request.brief.encode()).hexdigest(),
         )
 
         cached_result = await cache.get(cache_key)
@@ -266,6 +269,7 @@ async def stream_outline(
             "style_guide": outline_request.style_guide,
             "genre": outline_request.genre,
             "target_chapters": outline_request.target_chapters,
+            "model": outline_request.model,
         },
     )
     db.add(session)

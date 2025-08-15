@@ -14,7 +14,7 @@ Production-ready AI book-writing system that transforms author briefs into compl
 ## Tech Stack 🧰
 
 - **Backend**: FastAPI, SQLAlchemy (async), PostgreSQL, Redis
-- **AI/ML**: LiteLLM, CrewAI, Claude 3.5 Sonnet, GPT-4o, Gemini 1.5 Pro
+- **AI/ML**: LiteLLM, CrewAI, ChatGPT-5, Claude Sonnet 4.0, Gemini 2.5 Pro
 - **Frontend**: Next.js 14 (App Router), TypeScript, Tailwind CSS, Zustand
 - **Infrastructure**: Docker, Kubernetes (GKE), Prometheus, Grafana
 - **CI/CD**: GitHub Actions, automated testing, security scanning
@@ -160,9 +160,9 @@ kubectl create secret generic sopher-ai-secrets \
 ### LiteLLM Router
 
 Configure model routing in `router/litellm.config.yaml`:
-- Primary: Claude 3.5 Sonnet
-- Secondary: GPT-4o
-- Overflow: Gemini 1.5 Pro
+- Primary: ChatGPT-5
+- Secondary: Claude Sonnet 4.0
+- Overflow: Gemini 2.5 Pro
 - Budget allocation by agent
 
 ### Environment Variables
@@ -183,7 +183,7 @@ See `.env.example` for a complete list with descriptions. Key variables:
 | `REDIS_URL` | Redis connection string | `redis://localhost:6379/0` |
 | `JWT_SECRET` | JWT signing secret | `dev-secret-key-change-in-production` |
 | `MONTHLY_BUDGET_USD` | Monthly cost limit | `100` |
-| `PRIMARY_MODEL` | Main LLM model | `claude-3-5-sonnet` |
+| `PRIMARY_MODEL` | Main LLM model | `gpt-5` |
 | `LOG_LEVEL` | Logging verbosity | `INFO` |
 | `CORS_ORIGINS` | Allowed origins | `http://localhost:3000` |
 

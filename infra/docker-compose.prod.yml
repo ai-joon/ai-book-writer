@@ -111,9 +111,9 @@ services:
       GOOGLE_API_KEY: ${GOOGLE_API_KEY}
       
       # Model Configuration
-      PRIMARY_MODEL: ${PRIMARY_MODEL:-claude-3-5-sonnet}
-      SECONDARY_MODEL: ${SECONDARY_MODEL:-gpt-4o}
-      OVERFLOW_MODEL: ${OVERFLOW_MODEL:-gemini-1.5-pro}
+      PRIMARY_MODEL: ${PRIMARY_MODEL:-gpt-5}
+      SECONDARY_MODEL: ${SECONDARY_MODEL:-claude-sonnet-4.0}
+      OVERFLOW_MODEL: ${OVERFLOW_MODEL:-gemini-2.5-pro}
       
       # Cost Controls
       MONTHLY_BUDGET_USD: ${MONTHLY_BUDGET_USD:-500}

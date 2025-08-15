@@ -1,35 +1,21 @@
 model_list:
-  - model_name: claude-3-5-sonnet
+  - model_name: gpt-5
     litellm_params:
-      model: anthropic/claude-3-5-sonnet-20241022
+      model: openai/gpt-5
+      api_key: ${OPENAI_API_KEY}
+      max_tokens: 8192
+      temperature: 0.7
+
+  - model_name: claude-sonnet-4.0
+    litellm_params:
+      model: anthropic/claude-4.0-sonnet
       api_key: ${ANTHROPIC_API_KEY}
       max_tokens: 8192
       temperature: 0.7
-      
-  - model_name: gpt-4o
+
+  - model_name: gemini-2.5-pro
     litellm_params:
-      model: openai/gpt-4o
-      api_key: ${OPENAI_API_KEY}
-      max_tokens: 4096
-      temperature: 0.7
-      
-  - model_name: gpt-4o-mini
-    litellm_params:
-      model: openai/gpt-4o-mini
-      api_key: ${OPENAI_API_KEY}
-      max_tokens: 4096
-      temperature: 0.7
-      
-  - model_name: gemini-1.5-pro
-    litellm_params:
-      model: google/gemini-1.5-pro-latest
-      api_key: ${GOOGLE_API_KEY}
-      max_tokens: 8192
-      temperature: 0.7
-      
-  - model_name: gemini-1.5-flash
-    litellm_params:
-      model: google/gemini-1.5-flash-latest
+      model: google/gemini-2.5-pro
       api_key: ${GOOGLE_API_KEY}
       max_tokens: 8192
       temperature: 0.7
@@ -37,17 +23,17 @@ model_list:
 routing:
   strategy: usage-based-routing
   fallbacks:
-    - primary: claude-3-5-sonnet
-      secondary: gpt-4o
-    - primary: gpt-4o
-      secondary: claude-3-5-sonnet
+    - primary: gpt-5
+      secondary: claude-sonnet-4.0
+    - primary: claude-sonnet-4.0
+      secondary: gpt-5
   overflow:
     trigger: context_window_exceeded
-    route_to: gemini-1.5-pro
+    route_to: gemini-2.5-pro
   cheap_fallback:
     models:
-      - gpt-4o-mini
-      - gemini-1.5-flash
+      - claude-sonnet-4.0
+      - gemini-2.5-pro
 
 redis:
   url: ${REDIS_URL:-redis://localhost:6379/0}

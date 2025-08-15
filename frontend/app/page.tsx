@@ -9,6 +9,7 @@ export default function Home() {
   const [brief, setBrief] = useState('')
   const [styleGuide, setStyleGuide] = useState('')
   const [targetChapters, setTargetChapters] = useState(10)
+  const [model, setModel] = useState('gpt-5')
   const [streamedContent, setStreamedContent] = useState('')
   
   const messages = useStore((state: AppState) => state.messages)
@@ -68,6 +69,7 @@ export default function Home() {
           brief: brief.trim(),
           style_guide: styleGuide || '',
           target_chapters: targetChapters.toString(),
+          model,
         }),
         {
           withCredentials: true,
@@ -203,7 +205,23 @@ export default function Home() {
                   disabled={isGenerating}
                 />
               </div>
-              
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Model
+                </label>
+                <select
+                  value={model}
+                  onChange={(e) => setModel(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  disabled={isGenerating}
+                >
+                  <option value="gpt-5">ChatGPT-5 (Default)</option>
+                  <option value="claude-sonnet-4.0">Claude Sonnet 4.0</option>
+                  <option value="gemini-2.5-pro">Google Gemini 2.5 Pro</option>
+                </select>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium mb-2">
                   Target Chapters

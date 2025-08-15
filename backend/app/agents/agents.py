@@ -12,7 +12,7 @@ class BookWritingAgents:
     """Collection of specialized agents for book writing"""
 
     def __init__(self, model: Optional[str] = None):
-        self.model = model or os.getenv("PRIMARY_MODEL", "claude-3-5-sonnet")
+        self.model = model or os.getenv("PRIMARY_MODEL", "gpt-5")
         self._setup_agents()
 
     def _setup_agents(self):

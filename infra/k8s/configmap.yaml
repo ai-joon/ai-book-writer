@@ -4,7 +4,7 @@ metadata:
   name: sopher-ai-config
   namespace: sopher-ai
 data:
-  PRIMARY_MODEL: "claude-3-5-sonnet"
+  PRIMARY_MODEL: "gpt-5"
   LOG_LEVEL: "INFO"
   CORS_ORIGINS: "*"
   REDIS_DB: "0"
