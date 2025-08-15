@@ -41,6 +41,13 @@ spec:
         ports:
         - containerPort: 8000
           name: http
+        env:
+        - name: HOME
+          value: "/home/appuser"
+        - name: XDG_DATA_HOME
+          value: "/home/appuser/.local/share"
+        - name: XDG_CONFIG_HOME
+          value: "/home/appuser/.config"
         envFrom:
         - configMapRef:
             name: sopher-ai-config
@@ -51,6 +58,8 @@ spec:
           mountPath: /tmp
         - name: var-cache-volume
           mountPath: /var/cache
+        - name: home-volume
+          mountPath: /home/appuser
         resources:
           requests:
             cpu: "250m"
@@ -86,4 +95,6 @@ spec:
       - name: tmp-volume
         emptyDir: {}
       - name: var-cache-volume
+        emptyDir: {}
+      - name: home-volume
         emptyDir: {}
