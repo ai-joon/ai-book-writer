@@ -220,6 +220,11 @@ jobs:
       if: steps.check-gcp.outputs.has_credentials == 'true'
       uses: google-github-actions/setup-gcloud@v2
     
+    - name: Install GKE auth plugin
+      if: steps.check-gcp.outputs.has_credentials == 'true'
+      run: |
+        gcloud components install gke-gcloud-auth-plugin --quiet
+    
     - name: Configure kubectl
       if: steps.check-gcp.outputs.has_credentials == 'true'
       run: |
@@ -237,7 +242,7 @@ jobs:
         FERNET_KEY: ${{ secrets.FERNET_KEY }}
       run: |
         # Apply secrets with environment variable substitution
-        envsubst < infra/k8s/secret.yaml | kubectl apply -f -
+        envsubst < infra/k8s/secret.yaml | kubectl apply --validate=false -f -
         
         # Update image tags
         kubectl set image deployment/sopher-api \
