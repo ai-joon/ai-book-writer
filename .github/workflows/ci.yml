@@ -262,6 +262,32 @@ jobs:
           fi
         done
     
+    - name: Verify Docker images exist
+      if: steps.check-gcp.outputs.has_credentials == 'true'
+      run: |
+        echo "Checking if Docker images are available in GitHub Container Registry..."
+        # Check backend image
+        if docker manifest inspect ${{ env.REGISTRY }}/${{ github.repository_owner }}/sopher-backend:latest >/dev/null 2>&1; then
+          echo "✓ Backend image found: ${{ env.REGISTRY }}/${{ github.repository_owner }}/sopher-backend:latest"
+        else
+          echo "✗ Backend image NOT found!"
+          echo "Available tags for backend:"
+          curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            https://ghcr.io/v2/${{ github.repository_owner }}/sopher-backend/tags/list || true
+          exit 1
+        fi
+        
+        # Check frontend image
+        if docker manifest inspect ${{ env.REGISTRY }}/${{ github.repository_owner }}/sopher-frontend:latest >/dev/null 2>&1; then
+          echo "✓ Frontend image found: ${{ env.REGISTRY }}/${{ github.repository_owner }}/sopher-frontend:latest"
+        else
+          echo "✗ Frontend image NOT found!"
+          echo "Available tags for frontend:"
+          curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            https://ghcr.io/v2/${{ github.repository_owner }}/sopher-frontend/tags/list || true
+          exit 1
+        fi
+    
     - name: Deploy to Kubernetes
       if: steps.check-gcp.outputs.has_credentials == 'true'
       env:
@@ -326,14 +352,20 @@ jobs:
         echo "Deploying Ingress..."
         kubectl apply -f infra/k8s/ingress.yaml
         
-        # Update image tags to latest commit
+        # Update image tags to latest (which points to the just-built images from main branch)
+        echo "Setting image for sopher-api to: ${{ env.REGISTRY }}/${{ github.repository_owner }}/sopher-backend:latest"
         kubectl set image deployment/sopher-api \
-          api=${{ env.REGISTRY }}/${{ github.repository_owner }}/sopher-backend:${{ github.sha }} \
+          api=${{ env.REGISTRY }}/${{ github.repository_owner }}/sopher-backend:latest \
           -n sopher-ai
         
+        echo "Setting image for sopher-web to: ${{ env.REGISTRY }}/${{ github.repository_owner }}/sopher-frontend:latest"
         kubectl set image deployment/sopher-web \
-          web=${{ env.REGISTRY }}/${{ github.repository_owner }}/sopher-frontend:${{ github.sha }} \
+          web=${{ env.REGISTRY }}/${{ github.repository_owner }}/sopher-frontend:latest \
           -n sopher-ai
+        
+        # Force pull to get the latest image
+        kubectl rollout restart deployment/sopher-api -n sopher-ai
+        kubectl rollout restart deployment/sopher-web -n sopher-ai
         
         # Wait for rollout with extended timeout and better error handling
         echo "Waiting for API deployment rollout..."

@@ -36,7 +36,7 @@ spec:
           capabilities:
             drop:
               - ALL
-        image: ghcr.io/cheesejaguar/sopher-api:latest
+        image: ghcr.io/cheesejaguar/sopher-backend:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8000
