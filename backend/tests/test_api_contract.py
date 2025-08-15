@@ -81,25 +81,22 @@ async def test_outline_request_validation(async_client: AsyncClient, mock_token)
     project_id = str(uuid4())
 
     # Test missing brief
-    response = await async_client.post(
+    response = await async_client.get(
         f"/api/v1/projects/{project_id}/outline/stream",
-        json={},
         headers={"Authorization": "Bearer test-token"},
     )
     assert response.status_code == 422
 
     # Test brief too short
-    response = await async_client.post(
-        f"/api/v1/projects/{project_id}/outline/stream",
-        json={"brief": "short"},
+    response = await async_client.get(
+        f"/api/v1/projects/{project_id}/outline/stream?brief=short",
         headers={"Authorization": "Bearer test-token"},
     )
     assert response.status_code == 422
 
     # Test invalid target_chapters
-    response = await async_client.post(
-        f"/api/v1/projects/{project_id}/outline/stream",
-        json={"brief": "A valid book brief that is long enough", "target_chapters": 100},
+    response = await async_client.get(
+        f"/api/v1/projects/{project_id}/outline/stream?brief=A%20valid%20book%20brief%20that%20is%20long%20enough&target_chapters=100",
         headers={"Authorization": "Bearer test-token"},
     )
     assert response.status_code == 422
