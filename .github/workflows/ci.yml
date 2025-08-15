@@ -273,7 +273,24 @@ jobs:
         FERNET_KEY: ${{ secrets.FERNET_KEY }}
         POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
       run: |
-        # Apply secrets with environment variable substitution with retry logic
+        # Create namespace if it doesn't exist
+        kubectl create namespace sopher-ai --dry-run=client -o yaml | kubectl apply -f -
+        
+        # Install NGINX Ingress Controller if not present
+        echo "Checking for NGINX Ingress Controller..."
+        if ! kubectl get deployment ingress-nginx-controller -n ingress-nginx >/dev/null 2>&1; then
+          echo "Installing NGINX Ingress Controller..."
+          kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.2/deploy/static/provider/cloud/deploy.yaml
+          echo "Waiting for NGINX Ingress Controller to be ready..."
+          kubectl wait --namespace ingress-nginx \
+            --for=condition=ready pod \
+            --selector=app.kubernetes.io/component=controller \
+            --timeout=300s
+        else
+          echo "NGINX Ingress Controller already installed"
+        fi
+        
+        # Apply secrets with environment variable substitution
         echo "Applying Kubernetes secrets..."
         for i in {1..3}; do
           if envsubst < infra/k8s/secret.yaml | kubectl apply --validate=false -f -; then
@@ -289,7 +306,27 @@ jobs:
           fi
         done
         
-        # Update image tags
+        # Apply all Kubernetes manifests in order
+        echo "Deploying PostgreSQL..."
+        kubectl apply -f infra/k8s/postgres-service.yaml
+        kubectl apply -f infra/k8s/postgres-deployment.yaml
+        
+        echo "Deploying Redis..."
+        kubectl apply -f infra/k8s/redis-service.yaml
+        kubectl apply -f infra/k8s/redis-deployment.yaml
+        
+        echo "Deploying API backend..."
+        kubectl apply -f infra/k8s/api-service.yaml
+        kubectl apply -f infra/k8s/api-deployment.yaml
+        
+        echo "Deploying Web frontend..."
+        kubectl apply -f infra/k8s/web-service.yaml
+        kubectl apply -f infra/k8s/web-deployment.yaml
+        
+        echo "Deploying Ingress..."
+        kubectl apply -f infra/k8s/ingress.yaml
+        
+        # Update image tags to latest commit
         kubectl set image deployment/sopher-api \
           api=${{ env.REGISTRY }}/${{ github.repository_owner }}/sopher-backend:${{ github.sha }} \
           -n sopher-ai
@@ -299,8 +336,14 @@ jobs:
           -n sopher-ai
         
         # Wait for rollout
-        kubectl rollout status deployment/sopher-api -n sopher-ai
-        kubectl rollout status deployment/sopher-web -n sopher-ai
+        kubectl rollout status deployment/sopher-api -n sopher-ai --timeout=300s
+        kubectl rollout status deployment/sopher-web -n sopher-ai --timeout=300s
+        
+        # Verify deployment status
+        echo "Checking deployment status..."
+        kubectl get pods -n sopher-ai
+        kubectl get services -n sopher-ai
+        kubectl get ingress -n sopher-ai
     
     - name: Run smoke tests
       run: |
