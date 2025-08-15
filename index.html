@@ -3,82 +3,234 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>sopher.ai</title>
+    <title>sopher.ai — AI-powered storytelling platform</title>
+
+    <!-- SEO -->
+    <meta name="description" content="sopher.ai transforms your ideas from a simple brief into a complete manuscript with AI—outlines, chapter drafts, continuity checks, and collaborative editing.">
+    <!-- nosemgrep: html.security.audit.missing-integrity.missing-integrity -->
+    <link rel="canonical" href="https://sopher.ai/">
+    <meta name="theme-color" content="#1877f2">
+
+    <!-- Open Graph / Twitter -->
+    <meta property="og:title" content="sopher.ai — AI-powered storytelling platform">
+    <meta property="og:description" content="Go from outline to chapter drafts with continuity checks and collaborative editing—faster.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://sopher.ai/">
+    <meta property="og:image" content="https://sopher.ai/og-image.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="sopher.ai — AI-powered storytelling platform">
+    <meta name="twitter:description" content="AI that turns your brief into a manuscript with continuity and collaboration.">
+    <meta name="twitter:image" content="https://sopher.ai/og-image.jpg">
+
+    <!-- Favicon (replace with your real assets when ready) -->
+    <link rel="icon" href="/favicon.ico">
+
+    <!-- Mailchimp embed CSS (moved to head and forced HTTPS) -->
+    <link href="https://cdn-images.mailchimp.com/embedcode/classic-061523.css" rel="stylesheet" type="text/css" integrity="sha384-2RO/cg/q/TJqwilySfRb568CE6RX9hhp0DPmn3gUQyaKb1SIet0xZn5u8clmQXSz" crossorigin="anonymous">
+
     <style>
+        :root {
+            --brand: #1877f2;
+            --brand-bg: #e7f3ff;
+            --text: #1c1e21;
+            --muted: #4b4f56;
+            --bg: #f0f2f5;
+            --card: #ffffff;
+            --border-radius: 12px;
+        }
+
+        * { box-sizing: border-box; }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             line-height: 1.6;
             margin: 0;
             padding: 0;
-            background-color: #f0f2f5;
-            color: #1c1e21;
+            background-color: var(--bg);
+            color: var(--text);
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
         }
+
         .container {
             max-width: 800px;
             margin: 2rem;
             padding: 2rem;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            text-align: center;
+            background-color: var(--card);
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         }
+
+        header { text-align: center; }
+
         h1 {
-            font-size: 2.5rem;
-            color: #1877f2;
+            font-size: 2.25rem;
+            line-height: 1.2;
+            margin: 0 0 0.5rem;
+            color: var(--brand);
         }
+
         p {
-            font-size: 1.1rem;
-            color: #4b4f56;
+            font-size: 1.075rem;
+            color: var(--muted);
+            margin: 0.5rem 0;
         }
+
+        .badges {
+            margin: 1rem 0 1.25rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+
         .badge {
             display: inline-block;
-            padding: 0.5em 1em;
-            margin: 0.25em;
+            padding: 0.5em 0.9em;
             font-size: 0.9rem;
             font-weight: 600;
-            border-radius: 16px;
-            background-color: #e7f3ff;
-            color: #1877f2;
+            border-radius: 999px;
+            background-color: var(--brand-bg);
+            color: var(--brand);
+            white-space: nowrap;
         }
+
+        h2 {
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+            font-size: 1.375rem;
+        }
+
+        /* Mailchimp container: responsive width and centering */
+        #mc_embed_shell, #mc_embed_signup {
+            width: 100%;
+            max-width: 600px;
+            margin: 1rem auto 0;
+            background: #fff;
+        }
+
+        /* Make inputs full-width on small screens */
+        #mc_embed_signup .mc-field-group input,
+        #mc_embed_signup input[type="email"] {
+            width: 100%;
+        }
+
+        /* Footer */
         .footer {
             margin-top: 2rem;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             color: #606770;
+            text-align: center;
+        }
+
+        .footer a { color: var(--brand); text-decoration: none; }
+        .footer a:hover { text-decoration: underline; }
+
+        /* Accessibility: skip link */
+        .skip-link {
+            position: absolute;
+            left: -999px;
+            top: -999px;
+        }
+        .skip-link:focus {
+            left: 1rem;
+            top: 1rem;
+            background: #000;
+            color: #fff;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            z-index: 1000;
+        }
+
+        @media (max-width: 640px) {
+            .container { padding: 1.25rem; margin: 1rem; }
+            h1 { font-size: 1.9rem; }
+            p { font-size: 1rem; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>sopher.ai</h1>
-        <p>The future of storytelling is here. sopher.ai's AI-powered platform transforms your ideas from a simple brief into a complete manuscript.</p>
-        <p>Go from outline to chapter drafts, with continuity checks and collaborative editing, all in a fraction of the time.</p>
-        
-        <div>
-            <span class="badge">LiteLLM</span>
-            <span class="badge">CrewAI</span>
-            <span class="badge">FastAPI</span>
-            <span class="badge">Next.js 14</span>
-            <span class="badge">Docker</span>
-            <span class="badge">PostgreSQL</span>
-            <span class="badge">Redis</span>
-        </div>
+    <a class="skip-link" href="#main">Skip to content</a>
 
-        <h2>Coming Soon</h2>
-        <p>We are working hard to bring this revolutionary tool to authors and editors. Stay tuned for updates.</p>
+    <div class="container">
+        <header>
+            <h1>sopher.ai</h1>
+            <p>The future of storytelling is here. sopher.ai's AI-powered platform transforms your ideas from a simple brief into a complete manuscript.</p>
+            <p>Go from outline to chapter drafts, with continuity checks and collaborative editing, all in a fraction of the time.</p>
+            <div class="badges" aria-label="Technology stack">
+                <span class="badge">LiteLLM</span>
+                <span class="badge">CrewAI</span>
+                <span class="badge">FastAPI</span>
+                <span class="badge">Next.js 14</span>
+                <span class="badge">Docker</span>
+                <span class="badge">PostgreSQL</span>
+                <span class="badge">Redis</span>
+            </div>
+        </header>
+
+        <main id="main">
+            <h2>Coming Soon</h2>
+            <p>We are working hard to bring this revolutionary tool to authors and editors. Stay tuned for updates.</p>
+
+            <!-- Begin Mailchimp Signup Form -->
+            <div id="mc_embed_shell" role="region" aria-label="Beta Access Sign-up">
+                <div id="mc_embed_signup">
+                    <form action="https://sopher.us8.list-manage.com/subscribe/post?u=5d716fbe32b1b207f788eff50&amp;id=6815ef3f5e&amp;f_id=00eb08e1f0"
+                          method="post"
+                          id="mc-embedded-subscribe-form"
+                          name="mc-embedded-subscribe-form"
+                          class="validate"
+                          target="_blank"
+                          novalidate>
+                        <div id="mc_embed_signup_scroll">
+                            <h2 style="margin-top:0;">Beta Access Sign-up</h2>
+                            <div class="indicates-required"><span class="asterisk">*</span> indicates required</div>
+
+                            <div class="mc-field-group">
+                                <label for="mce-EMAIL">Email Address <span class="asterisk">*</span></label>
+                                <input type="email" name="EMAIL" class="required email" id="mce-EMAIL" required>
+                            </div>
+
+                            <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+                            <div style="position: absolute; left: -5000px;" aria-hidden="true">
+                                <input type="text" name="b_5d716fbe32b1b207f788eff50_6815ef3f5e" tabindex="-1" value="">
+                            </div>
+
+                            <div id="mce-responses" class="clear">
+                                <div class="response" id="mce-error-response" style="display:none;"></div>
+                                <div class="response" id="mce-success-response" style="display:none;"></div>
+                            </div>
+
+                            <div class="clear" style="margin-top:0.5rem;">
+                                <input type="submit" value="Request Beta Access" name="subscribe" id="mc-embedded-subscribe" class="button">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- End Mailchimp Signup Form -->
+        </main>
 
         <div class="footer">
-			&copy; 2025 sopher.ai • FOSS under <a href="LICENSE">MIT License</a> •
-			<a href="https://github.com/cheesejaguar/sopher.ai">GitHub Repository</a>
-			<div style="margin-top: 0.5rem;">
-				<a href="https://github.com/cheesejaguar/sopher.ai/actions" aria-label="GitHub Actions build status">
-					<img src="https://img.shields.io/github/checks-status/cheesejaguar/sopher.ai/main" alt="Build status: latest checks on main" />
-				</a>
-			</div>
+            &copy; 2025 sopher.ai • FOSS under
+            <a href="https://github.com/cheesejaguar/sopher.ai/blob/main/LICENSE">MIT License</a> •
+            <a href="https://github.com/cheesejaguar/sopher.ai">GitHub Repository</a>
+            <div style="margin-top: 0.5rem;">
+                <a href="https://github.com/cheesejaguar/sopher.ai/actions" aria-label="GitHub Actions build status">
+                    <img src="https://img.shields.io/github/checks-status/cheesejaguar/sopher.ai/main" alt="Build status: latest checks on main">
+                </a>
+            </div>
         </div>
     </div>
+
+    <!-- Mailchimp validation script (HTTPS) -->
+    <script src="https://s3.amazonaws.com/downloads.mailchimp.com/js/mc-validate.js" integrity="sha384-tWj/xleofQRha06LeoDOpUh4b+GWaw1q02wAAf4TuP/HbGhcmRvRzZGlPhMB6e7I" crossorigin="anonymous" defer></script>
+    <script defer>
+        // Optional: keep Mailchimp's validation globals (works even if the script isn't critical)
+        window.fnames = [];
+        window.ftypes = [];
+    </script>
 </body>
 </html>
