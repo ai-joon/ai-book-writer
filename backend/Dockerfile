@@ -6,8 +6,8 @@ FROM python:3.12-slim AS builder
 WORKDIR /app
 
 # Install build tools with apt cache
-RUN --mount=type=cache,target=/var/cache/apt \
-    --mount=type=cache,target=/var/lib/apt \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
     rm -f /var/lib/apt/lists/lock && apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     g++ \
@@ -37,8 +37,8 @@ FROM python:3.12-slim AS runtime
 WORKDIR /app
 
 # Install minimal runtime dependencies
-RUN --mount=type=cache,target=/var/cache/apt \
-    --mount=type=cache,target=/var/lib/apt \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
     rm -f /var/lib/apt/lists/lock && apt-get update && apt-get install -y --no-install-recommends \
     curl \
     ca-certificates \
