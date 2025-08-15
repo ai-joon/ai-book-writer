@@ -8,7 +8,7 @@ WORKDIR /app
 # Install build tools with apt cache
 RUN --mount=type=cache,target=/var/cache/apt \
     --mount=type=cache,target=/var/lib/apt \
-    apt-get update && apt-get install -y --no-install-recommends \
+    rm -f /var/lib/apt/lists/lock && apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     g++ \
     libc6-dev \
@@ -39,7 +39,7 @@ WORKDIR /app
 # Install minimal runtime dependencies
 RUN --mount=type=cache,target=/var/cache/apt \
     --mount=type=cache,target=/var/lib/apt \
-    apt-get update && apt-get install -y --no-install-recommends \
+    rm -f /var/lib/apt/lists/lock && apt-get update && apt-get install -y --no-install-recommends \
     curl \
     ca-certificates \
     dumb-init \
