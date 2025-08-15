@@ -290,6 +290,22 @@ export default function Home() {
           </div>
         </div>
       </main>
+      <footer className="text-center text-sm text-gray-500 py-4">
+        © 2025 sopher.ai •{' '}
+        <a
+          href="https://github.com/cheesejaguar/sopher.ai/blob/main/LICENSE"
+          className="underline"
+        >
+          MIT License
+        </a>{' '}
+        •{' '}
+        <a
+          href="https://github.com/cheesejaguar/sopher.ai"
+          className="underline"
+        >
+          GitHub Repository
+        </a>
+      </footer>
     </div>
   )
 }
