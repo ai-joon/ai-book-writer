@@ -41,7 +41,7 @@ If you prefer to run the commands manually or need to customize the setup:
 export PROJECT_ID="your-gcp-project-id"
 export SERVICE_ACCOUNT_NAME="github-actions-deployer"
 export CLUSTER_NAME="sopher-ai-prod"
-export CLUSTER_ZONE="us-central1-a"
+export CLUSTER_ZONE="us-west1-a"
 ```
 
 ### 2. Enable Required APIs

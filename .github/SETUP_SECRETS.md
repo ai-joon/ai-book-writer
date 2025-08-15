@@ -28,7 +28,7 @@ If you want to deploy to GCP/GKE, you need to create a service account with prop
 |-------------|-------------|---------------|
 | `GCP_SA_KEY` | Service account JSON key | Complete output from service account key creation |
 | `GKE_CLUSTER` | Kubernetes cluster name | Example: `sopher-ai-prod` |
-| `GKE_ZONE` | GCP zone | Example: `us-central1-a` |
+| `GKE_ZONE` | GCP zone | Example: `us-west1-a` |
 | `GCP_PROJECT` | GCP project ID | Your GCP project ID (e.g., `my-project-123456`) |
 
 #### 2. API Keys for Integration Tests (Optional)
