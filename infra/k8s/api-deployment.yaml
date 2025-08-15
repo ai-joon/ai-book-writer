@@ -87,10 +87,3 @@ spec:
         emptyDir: {}
       - name: var-cache-volume
         emptyDir: {}
-      nodeSelector:
-        workload: general
-      tolerations:
-      - key: "workload"
-        operator: "Equal"
-        value: "general"
-        effect: "NoSchedule"

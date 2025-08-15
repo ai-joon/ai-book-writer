@@ -79,5 +79,3 @@ spec:
         emptyDir: {}
       - name: next-cache-volume
         emptyDir: {}
-      nodeSelector:
-        workload: general
