@@ -335,9 +335,26 @@ jobs:
           web=${{ env.REGISTRY }}/${{ github.repository_owner }}/sopher-frontend:${{ github.sha }} \
           -n sopher-ai
         
-        # Wait for rollout
-        kubectl rollout status deployment/sopher-api -n sopher-ai --timeout=300s
-        kubectl rollout status deployment/sopher-web -n sopher-ai --timeout=300s
+        # Wait for rollout with extended timeout and better error handling
+        echo "Waiting for API deployment rollout..."
+        if ! kubectl rollout status deployment/sopher-api -n sopher-ai --timeout=600s; then
+          echo "API deployment rollout failed. Getting pod logs..."
+          kubectl get pods -n sopher-ai -l app=sopher-api
+          kubectl describe pods -n sopher-ai -l app=sopher-api
+          kubectl logs -n sopher-ai -l app=sopher-api --previous --tail=100 || true
+          kubectl logs -n sopher-ai -l app=sopher-api --tail=100 || true
+          exit 1
+        fi
+        
+        echo "Waiting for Web deployment rollout..."
+        if ! kubectl rollout status deployment/sopher-web -n sopher-ai --timeout=600s; then
+          echo "Web deployment rollout failed. Getting pod logs..."
+          kubectl get pods -n sopher-ai -l app=sopher-web
+          kubectl describe pods -n sopher-ai -l app=sopher-web
+          kubectl logs -n sopher-ai -l app=sopher-web --previous --tail=100 || true
+          kubectl logs -n sopher-ai -l app=sopher-web --tail=100 || true
+          exit 1
+        fi
         
         # Verify deployment status
         echo "Checking deployment status..."
