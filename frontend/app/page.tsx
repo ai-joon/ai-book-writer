@@ -65,6 +65,9 @@ export default function Home() {
         `/api/backend/v1/projects/${projectId}/outline/stream?` +
         new URLSearchParams({
           access_token,
+          brief: brief.trim(),
+          style_guide: styleGuide || '',
+          target_chapters: targetChapters.toString(),
         }),
         {
           withCredentials: true,

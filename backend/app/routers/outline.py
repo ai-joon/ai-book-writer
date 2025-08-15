@@ -3,10 +3,10 @@
 import hashlib
 import json
 import time
-from typing import AsyncIterator
+from typing import AsyncIterator, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from litellm import acompletion
 from sqlalchemy.ext.asyncio import AsyncSession
 from sse_starlette.sse import EventSourceResponse
@@ -227,16 +227,35 @@ Format as structured markdown."""
         active_sessions.dec()
 
 
-@router.post("/outline/stream")
+@router.get("/outline/stream")
 async def stream_outline(
     project_id: UUID,
     request: Request,
-    outline_request: OutlineRequest,
+    brief: str,
+    style_guide: Optional[str] = None,
+    genre: Optional[str] = None,
+    target_chapters: int = 10,
     db: AsyncSession = Depends(get_db),
     user: TokenData = Depends(get_current_user),
     background_tasks: BackgroundTasks = BackgroundTasks(),
 ) -> EventSourceResponse:
     """Stream outline generation via Server-Sent Events"""
+
+    # Validate brief length
+    if len(brief) < 10 or len(brief) > 10000:
+        raise HTTPException(status_code=422, detail="Brief must be between 10 and 10000 characters")
+
+    # Validate target_chapters
+    if target_chapters < 1 or target_chapters > 50:
+        raise HTTPException(status_code=422, detail="Target chapters must be between 1 and 50")
+
+    # Create outline request from query parameters
+    outline_request = OutlineRequest(
+        brief=brief,
+        style_guide=style_guide,
+        genre=genre,
+        target_chapters=target_chapters,
+    )
 
     # Create session
     session = Session(
