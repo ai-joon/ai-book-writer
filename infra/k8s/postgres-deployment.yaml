@@ -28,16 +28,16 @@ spec:
         - containerPort: 5432
         env:
         - name: POSTGRES_DB
-          value: "sopher"
+          value: "sopherai"
         - name: POSTGRES_USER
           valueFrom:
             secretKeyRef:
-              name: sopher-ai-secret
+              name: sopher-ai-secrets
               key: POSTGRES_USER
         - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: sopher-ai-secret
+              name: sopher-ai-secrets
               key: POSTGRES_PASSWORD
         volumeMounts:
         - name: postgres-data

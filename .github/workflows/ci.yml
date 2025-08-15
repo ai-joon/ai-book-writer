@@ -240,6 +240,7 @@ jobs:
         GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
         JWT_SECRET: ${{ secrets.JWT_SECRET }}
         FERNET_KEY: ${{ secrets.FERNET_KEY }}
+        POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
       run: |
         # Apply secrets with environment variable substitution
         envsubst < infra/k8s/secret.yaml | kubectl apply --validate=false -f -
