@@ -19,7 +19,7 @@ PROJECT_ID=${GCP_PROJECT_ID:-""}
 SERVICE_ACCOUNT_NAME="github-actions-deployer"
 SERVICE_ACCOUNT_EMAIL="${SERVICE_ACCOUNT_NAME}@${PROJECT_ID}.iam.gserviceaccount.com"
 KEY_FILE="github-actions-sa-key.json"
-CLUSTER_NAME=${GKE_CLUSTER:-"sopher-ai-cluster"}
+CLUSTER_NAME=${GKE_CLUSTER:-"sopher-ai-prod"}
 CLUSTER_ZONE=${GKE_ZONE:-"us-central1-a"}
 
 # Function to print colored output

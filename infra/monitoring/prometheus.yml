@@ -3,7 +3,7 @@ global:
   scrape_timeout: 10s
   evaluation_interval: 15s
   external_labels:
-    cluster: 'sopher-ai'
+    cluster: 'sopher-ai-prod'
     environment: 'production'
 
 rule_files:
