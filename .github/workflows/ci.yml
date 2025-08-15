@@ -316,6 +316,10 @@ jobs:
           echo "NGINX Ingress Controller already installed"
         fi
         
+        # Apply ConfigMap
+        echo "Applying ConfigMap..."
+        kubectl apply -f infra/k8s/configmap.yaml
+        
         # Apply secrets with environment variable substitution
         echo "Applying Kubernetes secrets..."
         for i in {1..3}; do
