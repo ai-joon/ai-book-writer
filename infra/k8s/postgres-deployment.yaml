@@ -15,14 +15,11 @@ spec:
       labels:
         app: postgres
     spec:
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 1000
       containers:
       - name: postgres
         securityContext:
           allowPrivilegeEscalation: false
-          runAsNonRoot: true
+          runAsNonRoot: false
         image: postgres:15
         ports:
         - containerPort: 5432
@@ -39,6 +36,8 @@ spec:
             secretKeyRef:
               name: sopher-ai-secrets
               key: POSTGRES_PASSWORD
+        - name: PGDATA
+          value: "/var/lib/postgresql/data/pgdata"
         volumeMounts:
         - name: postgres-data
           mountPath: /var/lib/postgresql/data
