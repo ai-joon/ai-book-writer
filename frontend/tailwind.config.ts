@@ -51,6 +51,18 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        ink: "var(--ink)",
+        indigo: "var(--indigo)",
+        parchment: "var(--parchment)",
+        teal: "var(--teal)",
+        gold: "var(--gold)",
+        slate: "var(--slate)",
+        snow: "var(--snow)",
+      },
+      fontFamily: {
+        sans: ['var(--font-inter)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        serif: ['var(--font-fraunces)', 'ui-serif', 'serif'],
+        mono: ['var(--font-jetbrains-mono)', 'ui-monospace', 'monospace'],
       },
       borderRadius: {
         lg: "var(--radius)",

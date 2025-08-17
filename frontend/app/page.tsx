@@ -145,26 +145,24 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+    <div className="min-h-screen bg-parchment dark:bg-indigo">
       {/* Header */}
-      <header className="border-b bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm sticky top-0 z-10">
+      <header className="sticky top-0 z-10 border-b border-slate bg-indigo text-snow">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <BookOpen className="h-6 w-6 text-blue-600" />
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              sopher.ai
-            </h1>
+            <BookOpen className="h-6 w-6 text-gold" />
+            <h1 className="text-2xl font-serif font-bold">sopher.ai</h1>
           </div>
-          
+
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 text-sm">
-              <DollarSign className="h-4 w-4 text-green-600" />
+              <DollarSign className="h-4 w-4 text-gold" />
               <span className="font-mono">${totalCost.toFixed(4)}</span>
             </div>
-            
+
             {isGenerating && (
               <div className="flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin text-teal" />
                 <span className="text-sm">{Math.round(progress)}%</span>
               </div>
             )}
@@ -177,43 +175,43 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Input Panel */}
           <div className="lg:col-span-1">
-            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-6 space-y-4">
-              <h2 className="text-xl font-semibold mb-4">Book Configuration</h2>
+            <div className="bg-snow rounded-xl shadow-[0_6px_20px_rgba(27,37,89,0.08)] p-6 space-y-4">
+              <h2 className="font-serif text-xl mb-4">Book Configuration</h2>
               
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium mb-2 text-slate">
                   Book Brief
                 </label>
                 <textarea
                   value={brief}
                   onChange={(e) => setBrief(e.target.value)}
-                  className="w-full h-32 px-3 py-2 border rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full h-32 px-3 py-2 border border-slate rounded-lg resize-none bg-parchment focus:ring-2 focus:ring-teal focus:border-transparent"
                   placeholder="Describe your book idea..."
                   disabled={isGenerating}
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium mb-2 text-slate">
                   Style Guide (Optional)
                 </label>
                 <textarea
                   value={styleGuide}
                   onChange={(e) => setStyleGuide(e.target.value)}
-                  className="w-full h-20 px-3 py-2 border rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full h-20 px-3 py-2 border border-slate rounded-lg resize-none bg-parchment focus:ring-2 focus:ring-teal focus:border-transparent"
                   placeholder="Writing style preferences..."
                   disabled={isGenerating}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium mb-2 text-slate">
                   Model
                 </label>
                 <select
                   value={model}
                   onChange={(e) => setModel(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-slate rounded-lg bg-parchment focus:ring-2 focus:ring-teal focus:border-transparent"
                   disabled={isGenerating}
                 >
                   <option value="gpt-5">ChatGPT-5 (Default)</option>
@@ -223,7 +221,7 @@ export default function Home() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium mb-2 text-slate">
                   Target Chapters
                 </label>
                 <input
@@ -232,15 +230,15 @@ export default function Home() {
                   onChange={(e) => setTargetChapters(parseInt(e.target.value) || 10)}
                   min="1"
                   max="50"
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-slate rounded-lg bg-parchment focus:ring-2 focus:ring-teal focus:border-transparent"
                   disabled={isGenerating}
                 />
               </div>
-              
+
               <button
                 onClick={startOutlineGeneration}
                 disabled={!brief.trim() || isGenerating}
-                className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-3 px-4 text-snow rounded-[14px] font-medium bg-gradient-to-r from-indigo to-teal hover:from-indigo/90 hover:to-teal/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isGenerating ? (
                   <>
@@ -254,11 +252,11 @@ export default function Home() {
                   </>
                 )}
               </button>
-              
+
               {progress > 0 && progress < 100 && (
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="w-full bg-slate/20 rounded-full h-2">
                   <div
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 h-2 rounded-full transition-all duration-300"
+                    className="bg-gradient-to-r from-indigo to-teal h-2 rounded-full transition-all duration-300"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
@@ -268,8 +266,8 @@ export default function Home() {
 
           {/* Output Panel */}
           <div className="lg:col-span-2">
-            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-6 h-[600px] flex flex-col">
-              <h2 className="text-xl font-semibold mb-4">Generated Content</h2>
+            <div className="bg-snow rounded-xl shadow-[0_6px_20px_rgba(27,37,89,0.08)] p-6 h-[600px] flex flex-col">
+              <h2 className="font-serif text-xl mb-4">Generated Content</h2>
               
               <div className="flex-1 overflow-y-auto space-y-4 px-2">
                 {messages.map((message: Message) => (
@@ -277,13 +275,13 @@ export default function Home() {
                     key={message.id}
                     className={`${
                       message.role === 'user'
-                        ? 'ml-auto bg-blue-50 dark:bg-blue-900/20'
+                        ? 'ml-auto bg-teal/10 dark:bg-teal/20'
                         : message.role === 'assistant'
-                        ? 'mr-auto bg-gray-50 dark:bg-gray-900/20'
-                        : 'mx-auto bg-yellow-50 dark:bg-yellow-900/20'
+                        ? 'mr-auto bg-snow dark:bg-slate'
+                        : 'mx-auto bg-gold/20 dark:bg-gold/30'
                     } rounded-lg p-4 max-w-[90%]`}
                   >
-                    <div className="text-xs text-gray-500 mb-1">
+                    <div className="text-xs text-slate mb-1">
                       {message.role === 'user' ? 'You' : message.role === 'assistant' ? 'AI' : 'System'}
                     </div>
                     <div className="prose prose-sm dark:prose-invert max-w-none">
@@ -291,13 +289,13 @@ export default function Home() {
                     </div>
                   </div>
                 ))}
-                
+
                 {isGenerating && streamedContent && (
-                  <div className="mr-auto bg-gray-50 dark:bg-gray-900/20 rounded-lg p-4 max-w-[90%]">
-                    <div className="text-xs text-gray-500 mb-1">AI</div>
+                  <div className="mr-auto bg-snow rounded-lg p-4 max-w-[90%]">
+                    <div className="text-xs text-slate mb-1">AI</div>
                     <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
                       {streamedContent}
-                      <span className="inline-block w-2 h-4 ml-1 bg-blue-600 animate-pulse" />
+                      <span className="inline-block w-2 h-4 ml-1 bg-teal animate-pulse" />
                     </div>
                   </div>
                 )}
@@ -308,7 +306,7 @@ export default function Home() {
           </div>
         </div>
       </main>
-      <footer className="text-center text-sm text-gray-500 py-4">
+      <footer className="bg-indigo text-snow text-center text-sm py-4">
         © 2025 sopher.ai •{' '}
         <a
           href="https://github.com/cheesejaguar/sopher.ai/blob/main/LICENSE"
