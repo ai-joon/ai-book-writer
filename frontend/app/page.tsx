@@ -145,7 +145,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-parchment dark:bg-indigo">
+    <div className="flex min-h-screen flex-col bg-parchment dark:bg-indigo">
       {/* Header */}
       <header className="sticky top-0 z-10 border-b border-slate bg-indigo text-snow">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -171,7 +171,7 @@ export default function Home() {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto flex-1 px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Input Panel */}
           <div className="lg:col-span-1">
