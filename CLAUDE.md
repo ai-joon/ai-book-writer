@@ -17,7 +17,7 @@ The system follows a three-tier architecture:
 ### Key Components
 
 - **CrewAI Multi-Agent System**: 5 specialized agents (ConceptGenerator, Outliner, Writer, Editor, ContinuityChecker)
-- **LiteLLM Router**: Primary/secondary/overflow model routing (Claude 3.5 Sonnet → GPT-4o → Gemini 1.5 Pro)
+- **LiteLLM Router**: Primary/secondary/overflow model routing (gpt-5 → claude-sonnet-4-20250514 → gemini-2.5-pro)
 - **SSE Streaming**: Real-time token streaming with < 300ms latency via Server-Sent Events
 - **Cost Tracking**: Real-time cost monitoring with budget controls and per-agent allocation
 - **Caching**: Redis-based response caching and rate limiting

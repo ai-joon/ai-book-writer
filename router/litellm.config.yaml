@@ -6,9 +6,9 @@ model_list:
       max_tokens: 8192
       temperature: 0.7
 
-  - model_name: claude-sonnet-4.0
+  - model_name: claude-sonnet-4-20250514
     litellm_params:
-      model: anthropic/claude-4.0-sonnet
+      model: anthropic/claude-sonnet-4-20250514
       api_key: ${ANTHROPIC_API_KEY}
       max_tokens: 8192
       temperature: 0.7
@@ -24,15 +24,15 @@ routing:
   strategy: usage-based-routing
   fallbacks:
     - primary: gpt-5
-      secondary: claude-sonnet-4.0
-    - primary: claude-sonnet-4.0
+      secondary: claude-sonnet-4-20250514
+    - primary: claude-sonnet-4-20250514
       secondary: gpt-5
   overflow:
     trigger: context_window_exceeded
     route_to: gemini-2.5-pro
   cheap_fallback:
     models:
-      - claude-sonnet-4.0
+      - claude-sonnet-4-20250514
       - gemini-2.5-pro
 
 redis:

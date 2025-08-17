@@ -58,7 +58,7 @@ def valid_outline_request(draw):
         style_guide=draw(st.one_of(st.none(), st.text(max_size=500))),
         genre=draw(st.one_of(st.none(), st.text(max_size=50))),
         target_chapters=draw(st.integers(min_value=1, max_value=50)),
-        model=draw(st.sampled_from(["gpt-5", "claude-sonnet-4.0", "gemini-2.5-pro"])),
+        model=draw(st.sampled_from(["gpt-5", "claude-sonnet-4-20250514", "gemini-2.5-pro"])),
     )
 
 

@@ -214,9 +214,9 @@ export default function Home() {
                   className="w-full px-3 py-2 border border-slate rounded-lg bg-parchment focus:ring-2 focus:ring-teal focus:border-transparent"
                   disabled={isGenerating}
                 >
-                  <option value="gpt-5">ChatGPT-5 (Default)</option>
-                  <option value="claude-sonnet-4.0">Claude Sonnet 4.0</option>
-                  <option value="gemini-2.5-pro">Google Gemini 2.5 Pro</option>
+                  <option value="gpt-5">GPT-5 (Default)</option>
+                  <option value="claude-sonnet-4-20250514">Claude Sonnet 4</option>
+                  <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
                 </select>
               </div>
 

@@ -52,7 +52,7 @@ class OutlineRequest(BaseModel):
     style_guide: Optional[str] = Field(None, max_length=5000)
     genre: Optional[str] = Field(None, max_length=50)
     target_chapters: int = Field(default=10, ge=1, le=50)
-    model: Literal["gpt-5", "claude-sonnet-4.0", "gemini-2.5-pro"] = "gpt-5"
+    model: Literal["gpt-5", "claude-sonnet-4-20250514", "gemini-2.5-pro"] = "gpt-5"
 
 
 class ChapterDraftRequest(BaseModel):

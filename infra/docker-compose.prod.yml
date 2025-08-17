@@ -112,7 +112,7 @@ services:
       
       # Model Configuration
       PRIMARY_MODEL: ${PRIMARY_MODEL:-gpt-5}
-      SECONDARY_MODEL: ${SECONDARY_MODEL:-claude-sonnet-4.0}
+      SECONDARY_MODEL: ${SECONDARY_MODEL:-claude-sonnet-4-20250514}
       OVERFLOW_MODEL: ${OVERFLOW_MODEL:-gemini-2.5-pro}
       
       # Cost Controls
