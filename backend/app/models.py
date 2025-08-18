@@ -13,6 +13,22 @@ class Base(DeclarativeBase):
     pass
 
 
+class User(Base):
+    """User represents an authenticated user"""
+
+    __tablename__ = "users"
+
+    id = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    email = Column(Text, nullable=False, unique=True, index=True)
+    name = Column(Text)
+    picture = Column(Text)
+    provider = Column(Text, nullable=False, default="google")  # Currently only Google
+    provider_sub = Column(Text, nullable=False, unique=True)  # Google 'sub' claim
+    role = Column(Text, nullable=False, default="author")
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+
 class Project(Base):
     """Project represents a book writing project"""
 

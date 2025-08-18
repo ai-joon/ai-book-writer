@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 
 from cryptography.fernet import Fernet
-from fastapi import Depends, HTTPException, status
+from fastapi import Cookie, Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -24,8 +24,8 @@ fernet = Fernet(FERNET_KEY.encode())
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# Bearer scheme
-security = HTTPBearer()
+# Bearer scheme (make it optional for cookie support)
+security = HTTPBearer(auto_error=False)
 
 
 class TokenData:
@@ -90,10 +90,33 @@ def verify_token(token: str, token_type: str = "access") -> TokenData:
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    request: Request,
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    access_token_cookie: Optional[str] = Cookie(None, alias="access_token"),
 ) -> TokenData:
-    """Get current user from JWT token"""
-    return verify_token(credentials.credentials)
+    """Get current user from JWT token (Bearer or Cookie)"""
+    token = None
+
+    # First try Bearer token from Authorization header
+    if credentials:
+        token = credentials.credentials
+
+    # Fall back to cookie if no Bearer token
+    if not token and access_token_cookie:
+        token = access_token_cookie
+
+    # Also support query parameter for SSE endpoints (backward compatibility)
+    if not token:
+        token = request.query_params.get("access_token")
+
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    return verify_token(token)
 
 
 async def get_current_admin(current_user: TokenData = Depends(get_current_user)) -> TokenData:

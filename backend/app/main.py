@@ -18,7 +18,7 @@ from .db import close_db, init_db
 from .errors import ErrorCode, api_error
 from .metrics import MetricsTracker, metrics_router
 from .middleware import RequestIDMiddleware
-from .routers import outline
+from .routers import auth, outline
 from .security import create_access_token
 
 # Configure logging
@@ -213,6 +213,7 @@ async def get_demo_token():
 
 
 # Include routers
+app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(metrics_router, prefix="/api", tags=["metrics"])
 app.include_router(outline.router, prefix="/api/v1", tags=["outline"])
 

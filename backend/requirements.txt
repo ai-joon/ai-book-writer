@@ -15,12 +15,13 @@ redis==5.2.0
 python-jose[cryptography]==3.3.0
 cryptography==44.0.1
 passlib[bcrypt]==1.7.4
+authlib==1.6.1
 
 # Monitoring and metrics
 prometheus-client==0.21.0
 
 # AI and LLM integration
-litellm==1.61.15
+litellm==1.74.9
 crewai==0.80.0
 
 # HTTP client and utilities
@@ -32,3 +33,6 @@ websockets==14.1
 # Data validation and settings
 pydantic==2.10.2
 pydantic-settings==2.6.1
+
+# Build tools (required by crewai)
+setuptools==69.0.0
