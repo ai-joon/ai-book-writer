@@ -61,8 +61,13 @@ export default function Home() {
     })
     
     try {
+      // Determine API base URL based on environment
+      const apiBase = typeof window !== 'undefined' && window.location.hostname === 'sopher.ai' 
+        ? 'https://api.sopher.ai'
+        : ''
+      
       // Get demo token (in production, use real auth)
-      const tokenResponse = await fetch('/api/backend/auth/demo-token', {
+      const tokenResponse = await fetch(`${apiBase}/auth/demo-token`, {
         method: 'POST',
       })
       const { access_token } = await tokenResponse.json()
@@ -72,7 +77,7 @@ export default function Home() {
       
       // Start SSE connection
       const eventSource = new EventSource(
-        `/api/backend/v1/projects/${projectId}/outline/stream?` +
+        `${apiBase}/api/v1/projects/${projectId}/outline/stream?` +
         new URLSearchParams({
           access_token,
           brief: brief.trim(),
