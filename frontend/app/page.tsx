@@ -11,6 +11,14 @@ export default function Home() {
   const [targetChapters, setTargetChapters] = useState(10)
   const [model, setModel] = useState('gpt-5')
   const [streamedContent, setStreamedContent] = useState('')
+  const [errorInfo, setErrorInfo] = useState<
+    | null
+    | {
+        message: string
+        hint?: string
+        diagnostics?: { error_id?: string; request_id?: string; error_code?: string; timestamp: string }
+      }
+  >(null)
   
   const messages = useStore((state: AppState) => state.messages)
   const addMessage = useStore((state: AppState) => state.addMessage)
@@ -33,6 +41,7 @@ export default function Home() {
     setGenerating(true)
     setProgress(0)
     setStreamedContent('')
+    setErrorInfo(null)
     
     // Add user message
     addMessage({
@@ -116,16 +125,46 @@ export default function Home() {
         console.error('SSE error:', event)
         eventSource.close()
         setGenerating(false)
-        
-        // Add error message
+
+        if (event instanceof MessageEvent && event.data) {
+          try {
+            const err = JSON.parse(event.data)
+            setErrorInfo({
+              message: err.message,
+              hint: err.hint,
+              diagnostics: {
+                error_id: err.error_id,
+                request_id: err.request_id,
+                error_code: err.error_code,
+                timestamp: err.timestamp,
+              },
+            })
+            addMessage({
+              id: Date.now().toString(),
+              role: 'system',
+              content: `Error: ${err.message}${err.hint ? ` Hint: ${err.hint}` : ''}`,
+              timestamp: new Date(),
+            })
+            return
+          } catch (e) {
+            console.error('Error parsing server error:', e)
+          }
+        }
+
+        const ts = new Date().toISOString()
+        setErrorInfo({
+          message: 'Connection issue: outline stream',
+          hint: 'Possible CORS, network, or server issue. Retry in a few seconds.',
+          diagnostics: { timestamp: ts, error_code: 'CONNECTION_ERROR' },
+        })
         addMessage({
           id: Date.now().toString(),
           role: 'system',
-          content: 'Error: Failed to generate outline. Please try again.',
+          content: 'Connection issue: outline stream. Please retry.',
           timestamp: new Date(),
         })
       })
-      
+
       eventSource.onerror = () => {
         eventSource.close()
         setGenerating(false)
@@ -134,11 +173,16 @@ export default function Home() {
     } catch (error) {
       console.error('Error starting generation:', error)
       setGenerating(false)
-      
+      const ts = new Date().toISOString()
+      setErrorInfo({
+        message: 'Connection issue: outline stream',
+        hint: 'Possible CORS, network, or server issue. Retry in a few seconds.',
+        diagnostics: { timestamp: ts, error_code: 'CONNECTION_ERROR' },
+      })
       addMessage({
         id: Date.now().toString(),
         role: 'system',
-        content: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        content: 'Connection issue: outline stream. Please retry.',
         timestamp: new Date(),
       })
     }
@@ -172,6 +216,24 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="container mx-auto flex-1 px-4 py-8">
+        {errorInfo && (
+          <div className="mb-4 border border-red-200 bg-red-50 text-red-800 p-4 rounded">
+            <p className="font-semibold">{errorInfo.message}</p>
+            {errorInfo.hint && <p className="text-sm mt-1">{errorInfo.hint}</p>}
+            {errorInfo.diagnostics && (
+              <button
+                className="mt-2 text-sm underline"
+                onClick={() =>
+                  navigator.clipboard.writeText(
+                    JSON.stringify(errorInfo.diagnostics)
+                  )
+                }
+              >
+                Copy diagnostics
+              </button>
+            )}
+          </div>
+        )}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Input Panel */}
           <div className="lg:col-span-1">

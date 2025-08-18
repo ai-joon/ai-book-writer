@@ -2,11 +2,12 @@
 
 import hashlib
 import json
+import logging
 import time
 from typing import AsyncIterator, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, Request, Response, status
 from litellm import acompletion
 from sqlalchemy.ext.asyncio import AsyncSession
 from sse_starlette.sse import EventSourceResponse
@@ -14,12 +15,15 @@ from sse_starlette.sse import EventSourceResponse
 from ..agents.agents import BookWritingAgents
 from ..cache import cache
 from ..db import get_db
+from ..errors import ErrorCode, api_error
 from ..metrics import MetricsTracker, active_sessions
 from ..models import Artifact, Cost, Event, Session
 from ..schemas import OutlineRequest
 from ..security import TokenData, get_current_user
 
 router = APIRouter(prefix="/projects/{project_id}", tags=["outline"])
+
+logger = logging.getLogger(__name__)
 
 
 async def event_generator(
@@ -225,7 +229,27 @@ Format as structured markdown."""
 
     except Exception as e:
         MetricsTracker.track_model_error(model, type(e).__name__)
-        yield {"event": "error", "data": json.dumps({"error": str(e)})}
+        err_response = api_error(
+            ErrorCode.OUTLINE_STREAM_INIT_FAILED.value,
+            "Could not start the outline stream.",
+            hint="Retry in a few seconds. If it persists, check service readiness or credentials.",
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+        body_bytes = bytes(err_response.body)
+        body = body_bytes.decode()
+        data = json.loads(body)
+        logger.error(
+            f"outline stream failed: {e}",
+            extra={
+                "error_id": data["error_id"],
+                "request_id": data["request_id"],
+                "error_code": data["error_code"],
+                "path": request.url.path,
+                "method": request.method,
+                "status": status.HTTP_500_INTERNAL_SERVER_ERROR,
+            },
+        )
+        yield {"event": "error", "data": body}
     finally:
         active_sessions.dec()
 
@@ -241,16 +265,56 @@ async def stream_outline(
     db: AsyncSession = Depends(get_db),
     user: TokenData = Depends(get_current_user),
     background_tasks: BackgroundTasks = BackgroundTasks(),
-) -> EventSourceResponse:
+) -> Response:
     """Stream outline generation via Server-Sent Events"""
 
     # Validate brief length
     if len(brief) < 10 or len(brief) > 10000:
-        raise HTTPException(status_code=422, detail="Brief must be between 10 and 10000 characters")
+        MetricsTracker.track_api_request(request.method, request.url.path, 422)
+        response = api_error(
+            ErrorCode.OUTLINE_INVALID_PARAMETER.value,
+            "Brief must be between 10 and 10000 characters.",
+            hint="Ensure 'brief' is 10-10000 characters.",
+            details={"field": "brief"},
+            status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        )
+        data = json.loads(response.body)
+        logger.error(
+            "invalid parameter",
+            extra={
+                "error_id": data["error_id"],
+                "request_id": data["request_id"],
+                "error_code": data["error_code"],
+                "path": request.url.path,
+                "method": request.method,
+                "status": status.HTTP_422_UNPROCESSABLE_ENTITY,
+            },
+        )
+        return response
 
     # Validate target_chapters
     if target_chapters < 1 or target_chapters > 50:
-        raise HTTPException(status_code=422, detail="Target chapters must be between 1 and 50")
+        MetricsTracker.track_api_request(request.method, request.url.path, 422)
+        response = api_error(
+            ErrorCode.OUTLINE_INVALID_PARAMETER.value,
+            "Target chapters must be between 1 and 50.",
+            hint="Provide a value between 1 and 50.",
+            details={"field": "target_chapters"},
+            status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        )
+        data = json.loads(response.body)
+        logger.error(
+            "invalid parameter",
+            extra={
+                "error_id": data["error_id"],
+                "request_id": data["request_id"],
+                "error_code": data["error_code"],
+                "path": request.url.path,
+                "method": request.method,
+                "status": status.HTTP_422_UNPROCESSABLE_ENTITY,
+            },
+        )
+        return response
 
     # Create outline request from query parameters
     outline_request = OutlineRequest(
@@ -277,7 +341,7 @@ async def stream_outline(
     await db.refresh(session)
 
     # Track API request
-    MetricsTracker.track_api_request("POST", "/outline/stream", 200)
+    MetricsTracker.track_api_request(request.method, request.url.path, 200)
 
     return EventSourceResponse(
         event_generator(

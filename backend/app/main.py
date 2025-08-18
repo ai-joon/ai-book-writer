@@ -1,5 +1,6 @@
 """Main FastAPI application for sopher.ai"""
 
+import json
 import logging
 import os
 from contextlib import asynccontextmanager
@@ -14,7 +15,9 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .cache import cache
 from .db import close_db, init_db
+from .errors import ErrorCode, api_error
 from .metrics import MetricsTracker, metrics_router
+from .middleware import RequestIDMiddleware
 from .routers import outline
 from .security import create_access_token
 
@@ -75,6 +78,9 @@ app.add_middleware(
     expose_headers=["X-Total-Count", "X-Request-ID"],
 )
 
+# Request ID middleware
+app.add_middleware(RequestIDMiddleware)
+
 
 # Exception handlers
 @app.exception_handler(RequestValidationError)
@@ -83,10 +89,26 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     MetricsTracker.track_api_request(
         method=request.method, endpoint=request.url.path, status_code=422
     )
-    return JSONResponse(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content={"detail": exc.errors(), "body": exc.body},
+    response = api_error(
+        ErrorCode.VALIDATION_ERROR.value,
+        "Invalid request.",
+        hint="Check request body against schema.",
+        details={"errors": exc.errors()},
+        status=status.HTTP_422_UNPROCESSABLE_ENTITY,
     )
+    body = json.loads(response.body)
+    logger.error(
+        "validation error",
+        extra={
+            "error_id": body["error_id"],
+            "request_id": body["request_id"],
+            "error_code": body["error_code"],
+            "path": request.url.path,
+            "method": request.method,
+            "status": status.HTTP_422_UNPROCESSABLE_ENTITY,
+        },
+    )
+    return response
 
 
 @app.exception_handler(StarletteHTTPException)
@@ -95,7 +117,58 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     MetricsTracker.track_api_request(
         method=request.method, endpoint=request.url.path, status_code=exc.status_code
     )
-    return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+    code_map = {
+        status.HTTP_401_UNAUTHORIZED: ErrorCode.UNAUTHORIZED.value,
+        status.HTTP_403_FORBIDDEN: ErrorCode.FORBIDDEN.value,
+        status.HTTP_404_NOT_FOUND: ErrorCode.NOT_FOUND.value,
+        status.HTTP_405_METHOD_NOT_ALLOWED: ErrorCode.METHOD_NOT_ALLOWED.value,
+    }
+    error_code = code_map.get(exc.status_code, ErrorCode.HTTP_ERROR.value)
+    response = api_error(
+        error_code,
+        str(exc.detail),
+        status=exc.status_code,
+    )
+    body = json.loads(response.body)
+    logger.error(
+        "http error",
+        extra={
+            "error_id": body["error_id"],
+            "request_id": body["request_id"],
+            "error_code": body["error_code"],
+            "path": request.url.path,
+            "method": request.method,
+            "status": exc.status_code,
+        },
+    )
+    return response
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    """Catch-all handler for unexpected errors"""
+    MetricsTracker.track_api_request(
+        method=request.method, endpoint=request.url.path, status_code=500
+    )
+    response = api_error(
+        ErrorCode.INTERNAL_ERROR.value,
+        "An internal error occurred.",
+        hint="Please try again later.",
+        status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+    )
+    body = json.loads(response.body)
+    logger.error(
+        f"unhandled error: {exc}",
+        extra={
+            "error_id": body["error_id"],
+            "request_id": body["request_id"],
+            "error_code": body["error_code"],
+            "path": request.url.path,
+            "method": request.method,
+            "status": status.HTTP_500_INTERNAL_SERVER_ERROR,
+        },
+    )
+    return response
 
 
 # Health check endpoints
