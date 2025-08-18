@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-sopher.ai is a production-ready AI book-writing system that transforms author briefs into complete manuscripts. The system uses real-time streaming, multi-agent collaboration via CrewAI, and comprehensive cost controls. It's built as a microservices architecture with FastAPI backend, Next.js frontend, and deployed on Kubernetes.
+sopher.ai is a production-ready AI book-writing system that transforms author briefs into complete manuscripts. The system uses real-time streaming, multi-agent collaboration via CrewAI, and comprehensive cost controls. Built as a microservices architecture with FastAPI backend, Next.js frontend, and deployed on Kubernetes.
 
 ## Architecture Overview
 
@@ -29,7 +29,7 @@ The system follows a three-tier architecture:
 ```bash
 cd backend
 pip install -e .[dev]                    # Install with dev dependencies
-uvicorn app.main:app --reload            # Run development server
+uvicorn app.main:app --reload            # Run development server (port 8000)
 pytest tests/ -v --cov=app              # Run tests with coverage
 pytest tests/test_api_contract.py::test_health_endpoint  # Run single test
 black app tests                          # Format code
@@ -42,10 +42,11 @@ mypy app                                 # Type check
 ```bash
 cd frontend
 npm install                              # Install dependencies
-npm run dev                              # Run development server
+npm run dev                              # Run development server (port 3000)
 npm run build                            # Build for production
 npm run lint                             # Lint code (ESLint with Next.js rules)
 npm run type-check                       # TypeScript strict mode checking
+npm run test                             # Run color contrast tests
 ```
 
 ### Quality Assurance Commands
@@ -68,11 +69,12 @@ cd infra
 docker-compose -f docker-compose.dev.yml up        # Start all services
 docker-compose -f docker-compose.dev.yml up -d     # Start in background
 docker-compose -f docker-compose.dev.yml logs -f   # Follow logs
+docker-compose -f docker-compose.dev.yml down      # Stop all services
 ```
 
 ## Database Architecture
 
-The system uses 5 main tables with UUID primary keys:
+The system uses 5 main tables (defined in `backend/app/models.py`) with UUID primary keys:
 
 - **projects**: Book projects with JSONB settings
 - **sessions**: Writing sessions linked to projects  
@@ -84,7 +86,7 @@ Database migrations are handled through SQLAlchemy with async support. All opera
 
 ## Agent System
 
-The CrewAI agents work in a coordinated pipeline:
+The CrewAI agents (in `backend/app/agents/agents.py`) work in a coordinated pipeline:
 
 1. **ConceptGenerator**: Expands brief into rich concepts
 2. **Outliner**: Creates detailed chapter-by-chapter structure  
@@ -96,7 +98,16 @@ Agents can work in parallel for chapter generation and use shared context throug
 
 ## API Design Patterns
 
-All streaming endpoints follow SSE pattern:
+### Main Endpoints
+- `/api/v1/projects/{id}/outline/stream` - Generate book outline with SSE streaming
+- `/api/v1/projects/{id}/chapter/{n}/draft/stream` - Stream chapter draft generation
+- `/api/v1/projects/{id}/chapter/{n}/edit/stream` - Stream editorial pass
+- `/api/v1/projects/{id}/continuity/run` - Run continuity checker
+- `/api/v1/projects/{id}/costs` - Get cost report
+- `/ws/agents/{id}` - WebSocket for real-time agent status updates
+
+### SSE Streaming Pattern
+All streaming endpoints follow this pattern:
 - Token events: `{"event": "token", "data": "content"}`
 - Checkpoints: `{"event": "checkpoint", "data": "{\"progress\": 0.5}"}`
 - Completion: `{"event": "complete", "data": "{\"tokens\": 1000}"}`
@@ -107,16 +118,17 @@ Authentication uses JWT with 1-hour expiry. Rate limiting is per-key (60 RPM). A
 
 Required environment variables:
 - `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GOOGLE_API_KEY`: LLM provider keys
-- `DATABASE_URL`: PostgreSQL connection string  
-- `REDIS_URL`: Redis connection string
-- `JWT_SECRET`: JWT signing secret
-- `MONTHLY_BUDGET_USD`: Cost limit (default: 500)
+- `DATABASE_URL`: PostgreSQL connection string (default: `postgresql+asyncpg://postgres:postgres@localhost:5432/sopherai`)
+- `REDIS_URL`: Redis connection string (default: `redis://localhost:6379/0`)
+- `JWT_SECRET`: JWT signing secret (generate with `openssl rand -hex 32`)
+- `MONTHLY_BUDGET_USD`: Cost limit (default: 100)
+- `PRIMARY_MODEL`: Main LLM model (default: gpt-5)
+
+See `.env.example` for complete configuration with descriptions.
 
 ## Development Setup
 
 ### Quick Start with .env.example
-
-The project includes a `.env.example` file in the root directory with all necessary environment variables for local development:
 
 1. **Copy the template**: `cp .env.example .env`
 2. **Add your API keys** (required):
@@ -140,14 +152,15 @@ docker-compose -f docker-compose.dev.yml up
 ```
 - Automatically sets up PostgreSQL, Redis, and all services
 - Hot reload enabled for both frontend and backend
-- Access at http://localhost:3000
+- Access at http://localhost:3000 (frontend), http://localhost:8000 (backend API)
+- API docs at http://localhost:8000/docs
 
 #### Local Development
 ```bash
 # Backend
 cd backend
 pip install -e .[dev]
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --port 8000
 
 # Frontend (separate terminal)
 cd frontend
@@ -164,39 +177,44 @@ For contributors: The CI/CD pipeline runs tests and builds without requiring any
 
 See `.github/SETUP_SECRETS.md` for setting up your own deployment pipeline.
 
-## Important File Structure Notes
+## Key File Locations
 
-### Frontend State Management
+### Frontend
 - `frontend/lib/zustand.ts`: Global state store with TypeScript interfaces (Message, Chapter, Project, AppState)
-- Uses persistence middleware for auth tokens and project data
-- Import with: `import { useStore } from '@/lib/zustand'` (path alias configured in tsconfig.json)
+- `frontend/app/`: Next.js App Router pages and components
+- `frontend/components/ui/`: Reusable UI components (Radix UI based)
+- Uses `@/*` path alias for imports (configured in tsconfig.json)
 
-### Backend Agent System
+### Backend
 - `backend/app/agents/agents.py`: BookWritingAgents class with 5 specialized CrewAI agents
-- Each agent has specific role, goal, and backstory for optimal performance
-- Async methods: `generate_concepts()`, `create_outline()`, `write_chapter()`, `edit_chapter()`, `check_continuity()`
+- `backend/app/models.py`: SQLAlchemy database models
+- `backend/app/schemas.py`: Pydantic validation schemas
+- `backend/app/routers/`: API endpoint implementations
+- `backend/app/main.py`: FastAPI application entry point
 
-### Database Schema
-- All tables use UUID primary keys with postgresql JSONB for metadata storage
-- Indexed on (session_id, created_at) for performance
-- SQLAlchemy async models with proper relationships and cascading deletes
+### Configuration
+- `router/litellm.config.yaml`: LiteLLM router configuration with model fallbacks and budget allocation
+- `.env.example`: Environment variable template
+- `infra/docker-compose.dev.yml`: Docker Compose configuration for local development
+- `infra/k8s/`: Kubernetes deployment manifests
 
 ## Testing Strategy
 
-- **Unit Tests**: Mock LLM responses, validate schemas and business logic
-- **Property Tests**: Use Hypothesis for schema validation and edge cases
-- **API Tests**: Contract testing with mocked authentication (13/15 tests currently passing)
-- **Coverage**: Target 90% excluding raw LLM content
+### Backend Testing
+- Test files: `backend/tests/test_api_contract.py`, `backend/tests/test_properties.py`
+- Run with: `pytest tests/ -v --cov=app`
+- Currently 13/15 tests passing (2 skipped due to complex SQLAlchemy mocking)
+- Property-based testing with Hypothesis for schema validation
 
-### Known Test Status
-- `test_outline_stream_contract` and `test_cost_tracking` are skipped due to complex SQLAlchemy model mocking
-- All health endpoints, validation, rate limiting, and schema tests pass
-- Frontend has no test suite yet - uses TypeScript strict mode and ESLint for quality assurance
+### Frontend Testing
+- Color contrast test: `frontend/tests/color-contrast.test.js`
+- Run with: `npm run test`
+- TypeScript strict mode and ESLint for quality assurance
+- No comprehensive test suite yet
 
-### Code Quality Tools Configuration
+### Code Quality Tools
 - **Backend**: Black (100 char line length), Ruff (E,F,I,N,W rules), MyPy (strict)
-- **Frontend**: ESLint (Next.js core-web-vitals), TypeScript strict mode, no explicit Prettier
-- **Path mapping**: Frontend uses `@/*` alias for imports (configured in tsconfig.json)
+- **Frontend**: ESLint (Next.js core-web-vitals), TypeScript strict mode
 
 ## Deployment Notes
 
@@ -208,15 +226,20 @@ The system is containerized and Kubernetes-ready:
 
 When modifying streaming endpoints, ensure proper cleanup of SSE connections and background tasks to prevent memory leaks.
 
-## CI/CD Configuration
+## CI/CD Pipeline
 
 GitHub Actions workflow (`.github/workflows/ci.yml`) includes:
-- **Security Scanning**: CodeQL analysis with matrix strategy for Python and JavaScript-TypeScript
+- **Security Scanning**: CodeQL analysis for Python and JavaScript-TypeScript
 - **Quality Gates**: Backend linting (ruff, black, mypy), frontend linting (ESLint, TypeScript)
-- **Testing**: Automated test execution with proper dependency installation
-- **Docker**: Automated image building and security scanning
+- **Testing**: Automated test execution with PostgreSQL and Redis services
+- **Docker**: Image building and pushing to GitHub Container Registry
+- **Deployment**: Optional GKE deployment (requires secrets configuration)
 
-### Common Issues and Solutions
+## Common Issues and Solutions
+
 - **TypeScript Path Resolution**: Remove explicit `baseUrl` from tsconfig.json - Next.js 14 App Router handles path resolution internally
 - **Ruff Line Length**: Use multi-line string formatting for long pytest.mark.skip decorators
-- **CodeQL**: Ensure proper init/autobuild/analyze sequence with correct language parameters
+- **Database Connection**: Ensure PostgreSQL is running and `DATABASE_URL` is correctly set
+- **Redis Connection**: Ensure Redis is running and `REDIS_URL` is correctly set
+- **API Keys**: All three LLM provider keys (Anthropic, OpenAI, Google) are required for full functionality
+- **CORS Issues**: Check `CORS_ORIGINS` environment variable includes your frontend URL
