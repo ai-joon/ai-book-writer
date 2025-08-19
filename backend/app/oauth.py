@@ -118,10 +118,8 @@ def set_auth_cookies(
     # Determine if we're in production
     is_production = request.url.hostname not in ["localhost", "127.0.0.1"]
 
-    # Set domain for production (allows sharing between subdomains)
-    domain = None
-    if is_production and request.url.hostname and ".sopher.ai" in request.url.hostname:
-        domain = ".sopher.ai"
+    # Don't set domain - let browser handle it (works better with proxies)
+    # This allows cookies to be accessible on the same domain as the request
 
     # Set access token cookie (1 hour)
     response.set_cookie(
@@ -132,7 +130,6 @@ def set_auth_cookies(
         samesite="lax",
         secure=is_production,
         path="/",
-        domain=domain,
     )
 
     # Set refresh token cookie (7 days)
@@ -144,7 +141,6 @@ def set_auth_cookies(
         samesite="lax",
         secure=is_production,
         path="/",
-        domain=domain,
     )
 
 
@@ -152,14 +148,10 @@ def clear_auth_cookies(response: Response, request: Request) -> None:
     """Clear authentication cookies"""
     is_production = request.url.hostname not in ["localhost", "127.0.0.1"]
 
-    domain = None
-    if is_production and request.url.hostname and ".sopher.ai" in request.url.hostname:
-        domain = ".sopher.ai"
-
+    # Don't set domain - match how cookies were set
     response.delete_cookie(
         key="access_token",
         path="/",
-        domain=domain,
         secure=is_production,
         httponly=True,
         samesite="lax",
@@ -167,7 +159,6 @@ def clear_auth_cookies(response: Response, request: Request) -> None:
     response.delete_cookie(
         key="refresh_token",
         path="/",
-        domain=domain,
         secure=is_production,
         httponly=True,
         samesite="lax",

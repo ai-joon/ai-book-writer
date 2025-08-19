@@ -37,12 +37,7 @@ export default function Home() {
     // Fetch user profile on mount
     const fetchUser = async () => {
       try {
-        // Determine API base URL based on environment
-        const apiBase = typeof window !== 'undefined' && window.location.hostname === 'sopher.ai' 
-          ? 'https://api.sopher.ai'
-          : ''
-        
-        const response = await fetch(`${apiBase}/auth/me`, {
+        const response = await fetch('/api/backend/auth/me', {
           credentials: 'include',
         })
         if (response.ok) {
@@ -61,12 +56,7 @@ export default function Home() {
   }, [streamedContent, messages])
 
   const handleLogout = async () => {
-    // Determine API base URL based on environment
-    const apiBase = typeof window !== 'undefined' && window.location.hostname === 'sopher.ai' 
-      ? 'https://api.sopher.ai'
-      : ''
-    
-    await fetch(`${apiBase}/auth/logout`, {
+    await fetch('/api/backend/auth/logout', {
       method: 'POST',
       credentials: 'include',
     })
@@ -99,17 +89,12 @@ export default function Home() {
     })
     
     try {
-      // Determine API base URL based on environment
-      const apiBase = typeof window !== 'undefined' && window.location.hostname === 'sopher.ai' 
-        ? 'https://api.sopher.ai'
-        : ''
-      
       // Create project (using demo project ID for now)
       const projectId = '00000000-0000-0000-0000-000000000000'
       
       // Start SSE connection (cookies will be included automatically)
       const eventSource = new EventSource(
-        `${apiBase}/api/v1/projects/${projectId}/outline/stream?` +
+        `/api/backend/v1/projects/${projectId}/outline/stream?` +
         new URLSearchParams({
           brief: brief.trim(),
           style_guide: styleGuide || '',

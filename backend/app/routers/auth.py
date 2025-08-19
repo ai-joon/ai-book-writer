@@ -116,9 +116,21 @@ async def callback_google(
     set_auth_cookies(response, access_token, refresh_token, request)
 
     # Redirect to frontend home page
-    frontend_url = (
-        "http://localhost:3000" if "localhost" in str(request.url) else "https://sopher.ai"
-    )
+    # When behind a proxy, the request will come from the frontend domain
+    # So we redirect back to the root of wherever the request came from
+    if "localhost" in str(request.url):
+        frontend_url = "http://localhost:3000"
+    elif request.headers.get("host"):
+        # Use the host header to determine the frontend domain
+        host = request.headers.get("host")
+        scheme = "https" if request.url.scheme == "https" else "http"
+        # Remove any API subdomain if present
+        if host and host.startswith("api."):
+            host = host[4:]  # Remove "api." prefix
+        frontend_url = f"{scheme}://{host}"
+    else:
+        frontend_url = "https://sopher.ai"
+
     return RedirectResponse(url=frontend_url, status_code=status.HTTP_302_FOUND)
 
 
