@@ -47,6 +47,7 @@ async def store_oauth_state(state: str, verifier: str) -> None:
 
 async def validate_oauth_state(state: str) -> Optional[str]:
     """Validate OAuth state and return PKCE verifier"""
+    import hashlib
     import logging
 
     logger = logging.getLogger(__name__)
@@ -64,8 +65,6 @@ async def validate_oauth_state(state: str) -> Optional[str]:
                 return None
         else:
             # Log only a hash of the state to prevent log injection
-            import hashlib
-
             state_hash = hashlib.sha256(state.encode()).hexdigest()[:8]
             logger.warning(f"OAuth state not found or expired: hash={state_hash}")
             return None
@@ -181,16 +180,17 @@ def set_auth_cookies(
         # For localhost, don't set domain (allows cookie on any port)
         if "localhost" in domain or "127.0.0.1" in domain:
             domain = None
-        # For production, use the base domain to allow subdomain access
-        elif "sopher.ai" in domain:
+        # For production, use exact domain matching to prevent evil-sopher.ai.com
+        elif domain.endswith(".sopher.ai") or domain == "sopher.ai":
             domain = ".sopher.ai"  # Allow access from sopher.ai and subdomains
 
     # Set access token cookie (1 hour)
+    # Using HttpOnly for security - frontend should use cookie automatically
     response.set_cookie(
         key="access_token",
         value=access_token,
         max_age=3600,
-        httponly=False,  # Allow JavaScript access for API calls
+        httponly=True,  # Protect against XSS attacks
         samesite="lax",
         secure=is_production,
         path="/",
@@ -223,7 +223,7 @@ def clear_auth_cookies(response: Response, request: Request) -> None:
 
         if "localhost" in domain or "127.0.0.1" in domain:
             domain = None
-        elif "sopher.ai" in domain:
+        elif domain.endswith(".sopher.ai") or domain == "sopher.ai":
             domain = ".sopher.ai"
 
     # Clear access token
