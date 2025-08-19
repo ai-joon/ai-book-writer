@@ -1,30 +1,8 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { BookOpen } from 'lucide-react'
 
 export default function LoginPage() {
-  const router = useRouter()
-
-  useEffect(() => {
-    // Check if already authenticated
-    const checkAuth = async () => {
-      try {
-        const response = await fetch('/api/backend/auth/me', {
-          credentials: 'include',
-        })
-        if (response.ok) {
-          // Already authenticated, redirect to home
-          router.push('/')
-        }
-        // If not OK (401, etc), silently stay on login page
-      } catch (error) {
-        // Network error - silently stay on login page
-      }
-    }
-    checkAuth()
-  }, [router])
 
   const handleGoogleLogin = () => {
     // Redirect to backend OAuth endpoint through Next.js proxy
@@ -37,10 +15,10 @@ export default function LoginPage() {
         <div className="bg-indigo-950/40 backdrop-blur-lg rounded-lg shadow-2xl p-8 border border-indigo-800/30">
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
-              <BookOpen className="h-12 w-12 text-yellow-400" />
+              <BookOpen className="h-12 w-12 text-yellow-300" />
             </div>
-            <h1 className="text-3xl font-bold text-yellow-400 mb-2">sopher.ai</h1>
-            <p className="text-indigo-300">AI-Powered Book Writing System</p>
+            <h1 className="text-3xl font-bold text-yellow-300 mb-2">sopher.ai</h1>
+            <p className="text-indigo-200">AI-Powered Book Writing System</p>
           </div>
 
           <div className="space-y-4">
@@ -71,7 +49,7 @@ export default function LoginPage() {
           </div>
 
           <div className="mt-6 text-center">
-            <p className="text-indigo-300 text-sm">
+            <p className="text-indigo-200 text-sm">
               By signing in, you agree to our Terms of Service and Privacy Policy.
             </p>
           </div>

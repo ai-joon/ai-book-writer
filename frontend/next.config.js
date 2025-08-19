@@ -1,8 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
   reactStrictMode: true,
   swcMinify: true,
+  poweredByHeader: false,
+  compress: true,
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
   async rewrites() {
     // Use service name for Kubernetes deployment, localhost for local dev
     const backendUrl = process.env.NODE_ENV === 'production' 
