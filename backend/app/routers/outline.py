@@ -4,11 +4,13 @@ import hashlib
 import json
 import logging
 import time
+from datetime import datetime
 from typing import AsyncIterator, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Request, Response, status
 from litellm import acompletion
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sse_starlette.sse import EventSourceResponse
 
@@ -17,7 +19,8 @@ from ..cache import cache
 from ..db import get_db
 from ..errors import ErrorCode, api_error
 from ..metrics import MetricsTracker, active_sessions
-from ..models import Artifact, Cost, Event, Session
+from ..models import Artifact, Cost, Event, Session, User
+from ..pricing import calculate_cost_usd
 from ..schemas import OutlineRequest
 from ..security import TokenData, get_current_user
 
@@ -162,12 +165,8 @@ Format as structured markdown."""
                         completion_tokens=completion_tokens,
                     )
 
-                    # Calculate cost (example rates)
-                    cost_per_1k_prompt = 0.003
-                    cost_per_1k_completion = 0.015
-                    total_cost = (prompt_tokens / 1000) * cost_per_1k_prompt + (
-                        completion_tokens / 1000
-                    ) * cost_per_1k_completion
+                    # Calculate cost using pricing module
+                    total_cost = calculate_cost_usd(model, prompt_tokens, completion_tokens)
 
                     MetricsTracker.track_cost(model, "outliner", total_cost)
 
@@ -267,6 +266,42 @@ async def stream_outline(
     background_tasks: BackgroundTasks = BackgroundTasks(),
 ) -> Response:
     """Stream outline generation via Server-Sent Events"""
+
+    # Check user's budget before starting
+    user_result = await db.execute(select(User).where(User.id == user.user_id))
+    user_record = user_result.scalar_one_or_none()
+
+    if not user_record:
+        return api_error(
+            ErrorCode.OUTLINE_STREAM_INIT_FAILED.value,
+            "User not found.",
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    # Get current month's usage
+    current_month = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    month_usage_result = await db.execute(
+        select(func.sum(Cost.usd))
+        .join(Session, Cost.session_id == Session.id)
+        .where(
+            Session.user_id == user.user_id,
+            Cost.created_at >= current_month,
+        )
+    )
+    month_usage = month_usage_result.scalar() or 0
+
+    # Check if budget exceeded
+    if month_usage >= user_record.monthly_budget_usd:
+        return api_error(
+            "BUDGET_EXCEEDED",
+            f"Monthly budget of ${user_record.monthly_budget_usd} exceeded.",
+            hint="Please increase your budget or wait for the next billing cycle.",
+            details={
+                "current_usage": float(month_usage),
+                "budget": float(user_record.monthly_budget_usd),
+            },
+            status=status.HTTP_403_FORBIDDEN,
+        )
 
     # Validate brief length
     if len(brief) < 10 or len(brief) > 10000:

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useStore } from '@/lib/zustand'
-import type { Message, AppState, User } from '@/lib/zustand'
+import type { Message, AppState, User, Usage, BookEstimate } from '@/lib/zustand'
 import { BookOpen, Loader2, DollarSign, Zap, LogOut, User as UserIcon } from 'lucide-react'
 
 export default function Home() {
@@ -30,26 +30,72 @@ export default function Home() {
   const incrementCost = useStore((state: AppState) => state.incrementCost)
   const user = useStore((state: AppState) => state.user)
   const setUser = useStore((state: AppState) => state.setUser)
+  const usage = useStore((state: AppState) => state.usage)
+  const setUsage = useStore((state: AppState) => state.setUsage)
+  const bookEstimate = useStore((state: AppState) => state.bookEstimate)
+  const setBookEstimate = useStore((state: AppState) => state.setBookEstimate)
   
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    // Fetch user profile on mount
-    const fetchUser = async () => {
+    // Fetch user profile and usage on mount
+    const fetchUserData = async () => {
       try {
-        const response = await fetch('/api/backend/auth/me', {
+        // Fetch user profile
+        const userResponse = await fetch('/api/backend/auth/me', {
           credentials: 'include',
         })
-        if (response.ok) {
-          const userData = await response.json()
+        if (userResponse.ok) {
+          const userData = await userResponse.json()
           setUser(userData as User)
         }
+        
+        // Fetch usage data
+        const usageResponse = await fetch('/api/backend/v1/users/me/usage', {
+          credentials: 'include',
+        })
+        if (usageResponse.ok) {
+          const usageData = await usageResponse.json()
+          setUsage(usageData as Usage)
+        }
       } catch (error) {
-        console.error('Failed to fetch user:', error)
+        console.error('Failed to fetch user data:', error)
       }
     }
-    fetchUser()
-  }, [setUser])
+    fetchUserData()
+  }, [setUser, setUsage])
+  
+  // Fetch cost estimate when parameters change
+  useEffect(() => {
+    const fetchEstimate = async () => {
+      if (!model || targetChapters < 1) return
+      
+      try {
+        const response = await fetch('/api/backend/v1/users/me/estimate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            model,
+            target_chapters: targetChapters,
+            avg_prompt_tokens: 2000,
+            avg_completion_tokens: 4000,
+          }),
+        })
+        
+        if (response.ok) {
+          const estimate = await response.json()
+          setBookEstimate(estimate as BookEstimate)
+        }
+      } catch (error) {
+        console.error('Failed to fetch estimate:', error)
+      }
+    }
+    
+    fetchEstimate()
+  }, [model, targetChapters, setBookEstimate])
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -220,10 +266,20 @@ export default function Home() {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 text-sm">
-              <DollarSign className="h-4 w-4 text-gold" />
-              <span className="font-mono">${totalCost.toFixed(4)}</span>
-            </div>
+            {usage && (
+              <div className="flex items-center gap-3 text-sm">
+                <div className="flex items-center gap-1">
+                  <DollarSign className="h-4 w-4 text-gold" />
+                  <span className="font-mono">
+                    ${usage.month_usd.toFixed(2)} / ${usage.monthly_budget_usd.toFixed(0)}
+                  </span>
+                </div>
+                <div className="h-4 w-1 bg-gold/30" />
+                <span className="text-xs text-snow/80">
+                  ${usage.remaining_budget_usd.toFixed(2)} left
+                </span>
+              </div>
+            )}
 
             {isGenerating && (
               <div className="flex items-center gap-2">
@@ -297,6 +353,22 @@ export default function Home() {
                   disabled={isGenerating}
                 />
               </div>
+              
+              {bookEstimate && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-amber-900">Estimated Cost</span>
+                    <span className="text-lg font-bold text-amber-900">
+                      ${bookEstimate.estimated_usd.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="text-xs text-amber-700 space-y-1">
+                    <div>Chapters: ${bookEstimate.breakdown.chapters?.toFixed(2) || '0.00'}</div>
+                    <div>Outline: ${bookEstimate.breakdown.outline?.toFixed(2) || '0.00'}</div>
+                    <div>Editing: ${bookEstimate.breakdown.editing?.toFixed(2) || '0.00'}</div>
+                  </div>
+                </div>
+              )}
               
               <div>
                 <label className="block text-sm font-medium mb-2 text-slate">

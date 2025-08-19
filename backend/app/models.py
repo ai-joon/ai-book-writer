@@ -25,6 +25,7 @@ class User(Base):
     provider = Column(Text, nullable=False, default="google")  # Currently only Google
     provider_sub = Column(Text, nullable=False, unique=True)  # Google 'sub' claim
     role = Column(Text, nullable=False, default="author")
+    monthly_budget_usd = Column(Numeric(10, 2), default=100.00)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
@@ -50,16 +51,20 @@ class Session(Base):
 
     id = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
     project_id = Column(PGUUID(as_uuid=True), ForeignKey("projects.id"), nullable=False)
-    user_id = Column(Text, nullable=False)
+    user_id = Column(PGUUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     context = Column(JSONB, default={})
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     project = relationship("Project", back_populates="sessions")
+    user = relationship("User")
     events = relationship("Event", back_populates="session", cascade="all, delete-orphan")
     artifacts = relationship("Artifact", back_populates="session", cascade="all, delete-orphan")
     costs = relationship("Cost", back_populates="session", cascade="all, delete-orphan")
 
-    __table_args__ = (Index("idx_session_project_created", "project_id", "created_at"),)
+    __table_args__ = (
+        Index("idx_session_project_created", "project_id", "created_at"),
+        Index("idx_session_user_id", "user_id"),
+    )
 
 
 class Event(Base):

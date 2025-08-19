@@ -13,6 +13,25 @@ export interface User {
   name?: string
   picture?: string
   role: string
+  monthly_budget_usd: number
+}
+
+export interface Usage {
+  total_usd: number
+  month_usd: number
+  monthly_budget_usd: number
+  remaining_budget_usd: number
+  by_agent: Record<string, number>
+  by_model: Record<string, number>
+}
+
+export interface BookEstimate {
+  estimated_usd: number
+  total_prompt_tokens: number
+  total_completion_tokens: number
+  breakdown: Record<string, number>
+  model: string
+  chapters: number
 }
 
 export interface AppState {
@@ -20,6 +39,12 @@ export interface AppState {
   user: User | null
   setUser: (user: User | null) => void
   isAuthenticated: boolean
+  
+  // Usage tracking
+  usage: Usage | null
+  setUsage: (usage: Usage | null) => void
+  bookEstimate: BookEstimate | null
+  setBookEstimate: (estimate: BookEstimate | null) => void
   
   // Message state
   messages: Message[]
@@ -41,6 +66,12 @@ export const useStore = create<AppState>((set) => ({
   user: null,
   setUser: (user) => set({ user, isAuthenticated: !!user }),
   isAuthenticated: false,
+  
+  // Usage tracking
+  usage: null,
+  setUsage: (usage) => set({ usage }),
+  bookEstimate: null,
+  setBookEstimate: (estimate) => set({ bookEstimate: estimate }),
   
   // Message state
   messages: [],

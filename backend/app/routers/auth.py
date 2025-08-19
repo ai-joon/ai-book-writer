@@ -190,4 +190,5 @@ async def get_me(
         "name": user.name,
         "picture": user.picture,
         "role": user.role,
+        "monthly_budget_usd": float(user.monthly_budget_usd),
     }
