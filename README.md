@@ -1,5 +1,7 @@
 # sopher.ai ✍️📚
 
+[![CI/CD Pipeline](https://github.com/cheesejaguar/sopher.ai/actions/workflows/ci.yml/badge.svg)](https://github.com/cheesejaguar/sopher.ai/actions/workflows/ci.yml)
+
 Production-ready AI book-writing system that transforms author briefs into complete manuscripts with real-time streaming, multi-agent collaboration, and comprehensive cost controls.
 
 ## Features ✨
