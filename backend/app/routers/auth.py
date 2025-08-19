@@ -182,9 +182,13 @@ async def callback_google(
     # Set cookies and redirect to frontend
     set_auth_cookies(response, access_token, refresh_token, request)
 
+    # Log successful authentication
+    logger.info(f"User {user.email} authenticated successfully, setting cookies")
+
     # Redirect to frontend home page with proper host validation
     # When proxied through frontend, use the host header but validate it first
     host = request.headers.get("host", "")
+    logger.info(f"OAuth callback host header: {host}")
 
     # Define allowed hosts to prevent SSRF attacks
     allowed_hosts = {

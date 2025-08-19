@@ -164,6 +164,10 @@ def set_auth_cookies(
     request: Request,
 ) -> None:
     """Set authentication cookies with appropriate security settings"""
+    import logging
+
+    logger = logging.getLogger(__name__)
+
     # Determine if we're in production based on the request
     # When proxied through frontend, check the original host header
     host = request.headers.get("host", "")
@@ -180,9 +184,13 @@ def set_auth_cookies(
         # For localhost, don't set domain (allows cookie on any port)
         if "localhost" in domain or "127.0.0.1" in domain:
             domain = None
-        # For production, use exact domain matching to prevent evil-sopher.ai.com
-        elif domain.endswith(".sopher.ai") or domain == "sopher.ai":
-            domain = ".sopher.ai"  # Allow access from sopher.ai and subdomains
+        # For production, always use .sopher.ai for both api.sopher.ai and sopher.ai
+        elif "sopher.ai" in domain:
+            domain = ".sopher.ai"  # Allow access from all sopher.ai subdomains
+
+    logger.info(
+        f"Setting auth cookies - host: {host}, domain: {domain}, production: {is_production}"
+    )
 
     # Set access token cookie (1 hour)
     # Not using HttpOnly so Next.js middleware can read it for auth checks
@@ -213,6 +221,10 @@ def set_auth_cookies(
 
 def clear_auth_cookies(response: Response, request: Request) -> None:
     """Clear authentication cookies"""
+    import logging
+
+    logger = logging.getLogger(__name__)
+
     host = request.headers.get("host", "")
     is_production = "localhost" not in host and "127.0.0.1" not in host
 
@@ -224,8 +236,10 @@ def clear_auth_cookies(response: Response, request: Request) -> None:
 
         if "localhost" in domain or "127.0.0.1" in domain:
             domain = None
-        elif domain.endswith(".sopher.ai") or domain == "sopher.ai":
+        elif "sopher.ai" in domain:
             domain = ".sopher.ai"
+
+    logger.info(f"Clearing auth cookies - host: {host}, domain: {domain}")
 
     # Clear access token (matching the settings from set_auth_cookies)
     response.delete_cookie(
