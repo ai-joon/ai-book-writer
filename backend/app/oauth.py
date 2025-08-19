@@ -16,7 +16,7 @@ from .cache import cache
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
 GOOGLE_OAUTH_REDIRECT_URI = os.getenv(
-    "GOOGLE_OAUTH_REDIRECT_URI", "http://localhost:8000/auth/callback/google"
+    "GOOGLE_OAUTH_REDIRECT_URI", "http://localhost:3000/api/backend/auth/callback/google"
 )
 
 # Google OAuth2 endpoints
@@ -115,21 +115,36 @@ def set_auth_cookies(
     request: Request,
 ) -> None:
     """Set authentication cookies with appropriate security settings"""
-    # Determine if we're in production
-    is_production = request.url.hostname not in ["localhost", "127.0.0.1"]
+    # Determine if we're in production based on the request
+    # When proxied through frontend, check the original host header
+    host = request.headers.get("host", "")
+    is_production = "localhost" not in host and "127.0.0.1" not in host
 
-    # Don't set domain - let browser handle it (works better with proxies)
-    # This allows cookies to be accessible on the same domain as the request
+    # Extract domain from host for cookie setting
+    # For proxied requests, cookies should be set for the frontend domain
+    domain = None
+    if host:
+        # Remove port if present
+        domain_parts = host.split(":")
+        domain = domain_parts[0]
+
+        # For localhost, don't set domain (allows cookie on any port)
+        if "localhost" in domain or "127.0.0.1" in domain:
+            domain = None
+        # For production, use the base domain to allow subdomain access
+        elif "sopher.ai" in domain:
+            domain = ".sopher.ai"  # Allow access from sopher.ai and subdomains
 
     # Set access token cookie (1 hour)
     response.set_cookie(
         key="access_token",
         value=access_token,
         max_age=3600,
-        httponly=True,
+        httponly=False,  # Allow JavaScript access for API calls
         samesite="lax",
         secure=is_production,
         path="/",
+        domain=domain,  # None for localhost, ".sopher.ai" for production
     )
 
     # Set refresh token cookie (7 days)
@@ -137,29 +152,46 @@ def set_auth_cookies(
         key="refresh_token",
         value=refresh_token,
         max_age=7 * 24 * 3600,
-        httponly=True,
+        httponly=True,  # Keep refresh token httponly for security
         samesite="lax",
         secure=is_production,
         path="/",
+        domain=domain,  # None for localhost, ".sopher.ai" for production
     )
 
 
 def clear_auth_cookies(response: Response, request: Request) -> None:
     """Clear authentication cookies"""
-    is_production = request.url.hostname not in ["localhost", "127.0.0.1"]
+    host = request.headers.get("host", "")
+    is_production = "localhost" not in host and "127.0.0.1" not in host
 
-    # Don't set domain - match how cookies were set
+    # Match domain setting from set_auth_cookies
+    domain = None
+    if host:
+        domain_parts = host.split(":")
+        domain = domain_parts[0]
+
+        if "localhost" in domain or "127.0.0.1" in domain:
+            domain = None
+        elif "sopher.ai" in domain:
+            domain = ".sopher.ai"
+
+    # Clear access token
     response.delete_cookie(
         key="access_token",
         path="/",
         secure=is_production,
-        httponly=True,
+        httponly=False,
         samesite="lax",
+        domain=domain,
     )
+
+    # Clear refresh token
     response.delete_cookie(
         key="refresh_token",
         path="/",
         secure=is_production,
         httponly=True,
         samesite="lax",
+        domain=domain,
     )
