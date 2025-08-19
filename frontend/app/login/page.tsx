@@ -18,8 +18,9 @@ export default function LoginPage() {
           // Already authenticated, redirect to home
           router.push('/')
         }
+        // If not OK (401, etc), silently stay on login page
       } catch (error) {
-        // Not authenticated, stay on login page
+        // Network error - silently stay on login page
       }
     }
     checkAuth()

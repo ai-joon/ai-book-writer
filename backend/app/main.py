@@ -11,6 +11,7 @@ import litellm
 from fastapi import FastAPI, Request, Response, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
@@ -28,7 +29,7 @@ logger = setup_logging()
 # Configure LiteLLM
 # For LiteLLM 1.48.x, use string type for cache configuration
 litellm.cache = litellm.Cache(
-    type="redis",
+    type="redis",  # type: ignore[arg-type]
     host=os.getenv("REDIS_HOST", "localhost"),
     port=os.getenv("REDIS_PORT", "6379"),
     db=int(os.getenv("REDIS_DB", "0")),
@@ -81,8 +82,10 @@ app.add_middleware(
     expose_headers=["X-Total-Count", "X-Request-ID"],
 )
 
-# Request ID middleware (disabled in favor of our new logging middleware)
-# app.add_middleware(RequestIDMiddleware)
+# Request ID handled by our logging middleware below
+
+# Add compression middleware for better performance
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 
 # Exception handlers
@@ -179,9 +182,10 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 # Request logging middleware
 @app.middleware("http")
 async def log_requests(request: Request, call_next: Callable) -> Response:
-    """Log all HTTP requests with GCP-compatible structured logging."""
+    """Log all HTTP requests with GCP-compatible structured logging and track metrics."""
     # Start timer
     start_time = time.time()
+    perf_start = time.perf_counter()
 
     # Extract or generate request ID
     request_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
@@ -222,6 +226,7 @@ async def log_requests(request: Request, call_next: Callable) -> Response:
 
         # Calculate latency
         latency = time.time() - start_time
+        process_time = time.perf_counter() - perf_start
 
         # Determine severity based on status code
         if response.status_code >= 500:
@@ -253,8 +258,15 @@ async def log_requests(request: Request, call_next: Callable) -> Response:
         else:
             logger.info("request completed", extra={"http_status": response.status_code})
 
-        # Add request ID to response headers
+        # Add request ID and process time to response headers
         response.headers["X-Request-ID"] = request_id
+        response.headers["X-Process-Time"] = str(process_time)
+
+        # Track metrics for successful requests
+        if response.status_code < 400:
+            MetricsTracker.track_api_request(
+                method=request.method, endpoint=request.url.path, status_code=response.status_code
+            )
 
         return response  # type: ignore[no-any-return]
 
@@ -325,22 +337,3 @@ async def root():
 
 
 # Middleware for request tracking
-@app.middleware("http")
-async def track_requests(request: Request, call_next):
-    """Track all HTTP requests"""
-    import time
-
-    start_time = time.perf_counter()
-
-    response = await call_next(request)
-
-    process_time = time.perf_counter() - start_time
-    response.headers["X-Process-Time"] = str(process_time)
-
-    # Track metrics for successful requests
-    if response.status_code < 400:
-        MetricsTracker.track_api_request(
-            method=request.method, endpoint=request.url.path, status_code=response.status_code
-        )
-
-    return response
