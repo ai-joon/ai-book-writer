@@ -60,11 +60,20 @@ async def callback_google(
     try:
         # Exchange code for tokens and get user info
         token, userinfo = await exchange_code_for_token(code, verifier)
+    except HTTPException:
+        # Re-raise HTTPExceptions (like missing credentials) as-is
+        raise
     except Exception as e:
         logger.error(f"OAuth token exchange failed: {e}")
+        # Check if it's a configuration issue
+        if "GOOGLE_CLIENT_ID" in str(e) or "GOOGLE_CLIENT_SECRET" in str(e):
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Google OAuth is not properly configured. Please contact the administrator.",
+            )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Failed to authenticate with Google",
+            detail=f"Failed to authenticate with Google: {str(e)}",
         )
 
     # Extract user information

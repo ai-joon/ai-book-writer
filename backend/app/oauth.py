@@ -59,7 +59,10 @@ def get_google_oauth_client() -> AsyncOAuth2Client:
     if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Google OAuth credentials not configured",
+            detail=(
+                "Google OAuth credentials not configured. "
+                "Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables."
+            ),
         )
 
     return AsyncOAuth2Client(

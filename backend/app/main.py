@@ -43,6 +43,17 @@ async def lifespan(app: FastAPI):
     """Manage application lifecycle"""
     # Startup
     logger.info("Starting sopher.ai backend...")
+
+    # Check OAuth configuration
+    google_client_id = os.getenv("GOOGLE_CLIENT_ID", "")
+    google_client_secret = os.getenv("GOOGLE_CLIENT_SECRET", "")
+    if not google_client_id or not google_client_secret:
+        logger.warning(
+            "Google OAuth credentials not configured. Authentication will not work. "
+            "Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables. "
+            "See docs/oauth-fix-guide.md for setup instructions."
+        )
+
     await init_db()
     await cache.connect()
     logger.info("Database and cache connected")
