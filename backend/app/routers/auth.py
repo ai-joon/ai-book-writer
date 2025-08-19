@@ -188,7 +188,9 @@ async def callback_google(
     # Redirect to frontend home page with proper host validation
     # When proxied through frontend, use the host header but validate it first
     host = request.headers.get("host", "")
-    logger.info(f"OAuth callback host header: {host}")
+    origin = request.headers.get("origin", "")
+    referer = request.headers.get("referer", "")
+    logger.info(f"OAuth callback headers - host: {host}, origin: {origin}, referer: {referer}")
 
     # Define allowed hosts to prevent SSRF attacks
     allowed_hosts = {
@@ -197,6 +199,7 @@ async def callback_google(
         "127.0.0.1:3000",
         "sopher.ai",
         "api.sopher.ai",
+        "www.sopher.ai",
     }
 
     # Validate and determine the frontend URL
@@ -243,6 +246,25 @@ async def logout(request: Request, response: Response):
     """Clear authentication cookies"""
     clear_auth_cookies(response, request)
     return {"message": "Logged out successfully"}
+
+
+@router.get("/verify")
+async def verify_auth(request: Request):
+    """Verify authentication cookies are present"""
+    access_token = request.cookies.get("access_token")
+    refresh_token = request.cookies.get("refresh_token")
+
+    logger.info(
+        f"Cookie verification - access: {bool(access_token)}, " f"refresh: {bool(refresh_token)}"
+    )
+
+    return {
+        "authenticated": access_token is not None,
+        "has_access_token": access_token is not None,
+        "has_refresh_token": refresh_token is not None,
+        "host": request.headers.get("host", ""),
+        "cookies_present": list(request.cookies.keys()),
+    }
 
 
 @router.get("/me")
