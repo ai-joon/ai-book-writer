@@ -21,7 +21,7 @@ authlib==1.6.1
 prometheus-client==0.21.0
 
 # AI and LLM integration
-openai>=1.51.0
+openai>=1.51.0,<1.57.0
 litellm>=1.48.0,<1.49.0
 crewai==0.80.0
 
