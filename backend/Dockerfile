@@ -27,7 +27,9 @@ COPY requirements.txt ./
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install --prefer-binary -r requirements.txt
 
+# Copy application code and pyproject.toml for editable install
 COPY pyproject.toml ./
+COPY app ./app
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install --prefer-binary -e . --no-deps
 
