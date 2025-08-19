@@ -69,9 +69,15 @@ app = FastAPI(
 )
 
 # Add CORS middleware
+# When credentials are included, we must specify exact origins (not wildcards)
+default_origins = "https://sopher.ai,https://api.sopher.ai,http://localhost:3000"
+cors_origins = os.getenv("CORS_ORIGINS", default_origins).split(",")
+# Remove any whitespace from origins
+cors_origins = [origin.strip() for origin in cors_origins]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.getenv("CORS_ORIGINS", "*").split(","),
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

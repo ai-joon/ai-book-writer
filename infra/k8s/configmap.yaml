@@ -6,6 +6,6 @@ metadata:
 data:
   PRIMARY_MODEL: "gpt-5"
   LOG_LEVEL: "INFO"
-  CORS_ORIGINS: "*"
+  CORS_ORIGINS: "https://sopher.ai,http://localhost:3000"
   REDIS_DB: "0"
   MONTHLY_BUDGET_USD: "500"
