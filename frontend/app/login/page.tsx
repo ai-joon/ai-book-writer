@@ -38,7 +38,7 @@ export default function LoginPage() {
             <div className="flex justify-center mb-4">
               <BookOpen className="h-12 w-12 text-yellow-400" />
             </div>
-            <h1 className="text-3xl font-bold text-white mb-2">Sopher.AI</h1>
+            <h1 className="text-3xl font-bold text-yellow-400 mb-2">sopher.ai</h1>
             <p className="text-indigo-300">AI-Powered Book Writing System</p>
           </div>
 
