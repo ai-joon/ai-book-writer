@@ -243,3 +243,4 @@ GitHub Actions workflow (`.github/workflows/ci.yml`) includes:
 - **Redis Connection**: Ensure Redis is running and `REDIS_URL` is correctly set
 - **API Keys**: All three LLM provider keys (Anthropic, OpenAI, Google) are required for full functionality
 - **CORS Issues**: Check `CORS_ORIGINS` environment variable includes your frontend URL
+- Remember to always ensure all unit tests are passing, and lint is clean

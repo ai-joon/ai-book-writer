@@ -10,7 +10,6 @@ from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from litellm.types.caching import LiteLLMCacheType
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .cache import cache
@@ -29,9 +28,9 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Configure LiteLLM
-cache_type: LiteLLMCacheType = LiteLLMCacheType.REDIS
+# For LiteLLM 1.48.x, use string type for cache configuration
 litellm.cache = litellm.Cache(
-    type=cache_type,
+    type="redis",
     host=os.getenv("REDIS_HOST", "localhost"),
     port=os.getenv("REDIS_PORT", "6379"),
     db=int(os.getenv("REDIS_DB", "0")),
