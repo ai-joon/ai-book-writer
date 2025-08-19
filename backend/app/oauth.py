@@ -185,12 +185,13 @@ def set_auth_cookies(
             domain = ".sopher.ai"  # Allow access from sopher.ai and subdomains
 
     # Set access token cookie (1 hour)
-    # Using HttpOnly for security - frontend should use cookie automatically
+    # Not using HttpOnly so Next.js middleware can read it for auth checks
+    # The token itself has expiry and we use refresh tokens for security
     response.set_cookie(
         key="access_token",
         value=access_token,
         max_age=3600,
-        httponly=True,  # Protect against XSS attacks
+        httponly=False,  # Allow Next.js middleware to read for auth checks
         samesite="lax",
         secure=is_production,
         path="/",
@@ -226,7 +227,7 @@ def clear_auth_cookies(response: Response, request: Request) -> None:
         elif domain.endswith(".sopher.ai") or domain == "sopher.ai":
             domain = ".sopher.ai"
 
-    # Clear access token
+    # Clear access token (matching the settings from set_auth_cookies)
     response.delete_cookie(
         key="access_token",
         path="/",
