@@ -47,11 +47,32 @@ async def store_oauth_state(state: str, verifier: str) -> None:
 
 async def validate_oauth_state(state: str) -> Optional[str]:
     """Validate OAuth state and return PKCE verifier"""
-    data = await cache.get(f"oauth:state:{state}")
-    if data:
-        await cache.delete(f"oauth:state:{state}")  # One-time use
-        return str(data.get("verifier")) if data.get("verifier") else None
-    return None
+    import logging
+
+    logger = logging.getLogger(__name__)
+
+    try:
+        data = await cache.get(f"oauth:state:{state}")
+        if data:
+            await cache.delete(f"oauth:state:{state}")  # One-time use
+            verifier = data.get("verifier")
+            if verifier:
+                logger.info("OAuth state validated successfully")
+                return str(verifier)
+            else:
+                logger.warning("OAuth state found but no verifier present")
+                return None
+        else:
+            # Log only a hash of the state to prevent log injection
+            import hashlib
+
+            state_hash = hashlib.sha256(state.encode()).hexdigest()[:8]
+            logger.warning(f"OAuth state not found or expired: hash={state_hash}")
+            return None
+    except Exception as e:
+        # Use exc_info for full details, log only error type for safety
+        logger.error(f"Failed to validate OAuth state: {type(e).__name__}", exc_info=True)
+        raise
 
 
 def get_google_oauth_client() -> AsyncOAuth2Client:
@@ -93,20 +114,46 @@ def get_google_auth_url(state: str, code_challenge: str) -> str:
 
 async def exchange_code_for_token(code: str, code_verifier: str) -> tuple[dict, dict]:
     """Exchange authorization code for tokens and fetch user info"""
-    client = get_google_oauth_client()
+    import logging
 
-    # Exchange code for token
-    token = await client.fetch_token(
-        GOOGLE_TOKEN_URL,
-        code=code,
-        code_verifier=code_verifier,
-    )
+    logger = logging.getLogger(__name__)
 
-    # Fetch user info
-    client.token = token
-    resp = await client.get(GOOGLE_USERINFO_URL)
-    resp.raise_for_status()
-    userinfo = resp.json()
+    try:
+        client = get_google_oauth_client()
+    except HTTPException:
+        # Re-raise configuration errors
+        raise
+    except Exception as e:
+        logger.error(f"Failed to create OAuth client: {type(e).__name__}", exc_info=True)
+        raise
+
+    try:
+        # Exchange code for token
+        logger.info("Exchanging OAuth code for token")
+        token = await client.fetch_token(
+            GOOGLE_TOKEN_URL,
+            code=code,
+            code_verifier=code_verifier,
+        )
+    except Exception as e:
+        logger.error(f"Token exchange failed: {type(e).__name__}", exc_info=True)
+        # Add more context to the error
+        if "invalid_grant" in str(e):
+            raise ValueError("invalid_grant: The authorization code is invalid or has expired")
+        elif "redirect_uri_mismatch" in str(e):
+            raise ValueError(f"redirect_uri_mismatch: Expected {GOOGLE_OAUTH_REDIRECT_URI}")
+        else:
+            raise
+
+    try:
+        # Fetch user info
+        client.token = token
+        resp = await client.get(GOOGLE_USERINFO_URL)
+        resp.raise_for_status()
+        userinfo = resp.json()
+    except Exception as e:
+        logger.error(f"Failed to fetch user info: {type(e).__name__}", exc_info=True)
+        raise ValueError(f"Failed to fetch user info from Google: {str(e)}")
 
     return token, userinfo
 

@@ -2,6 +2,7 @@
 
 import logging
 import os
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.responses import RedirectResponse
@@ -63,16 +64,36 @@ async def login_google():
 
 
 @router.get("/callback/google")
+@router.head("/callback/google")  # Support HEAD requests for health checks
 async def callback_google(
     request: Request,
     response: Response,
-    code: str,
-    state: str,
+    code: Optional[str] = None,
+    state: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
 ):
     """Handle Google OAuth2 callback"""
+    # Handle HEAD requests (return empty response)
+    if request.method == "HEAD":
+        return Response(status_code=status.HTTP_200_OK)
+
+    # Validate required parameters
+    if not code or not state:
+        logger.error(f"Missing OAuth parameters - code: {bool(code)}, state: {bool(state)}")
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Missing required OAuth parameters: code and state",
+        )
     # Validate state and get PKCE verifier
-    verifier = await validate_oauth_state(state)
+    try:
+        verifier = await validate_oauth_state(state)
+    except Exception as e:
+        logger.error(f"Failed to validate OAuth state: {type(e).__name__}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to validate OAuth state. Please try logging in again.",
+        )
+
     if not verifier:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -82,21 +103,35 @@ async def callback_google(
     try:
         # Exchange code for tokens and get user info
         token, userinfo = await exchange_code_for_token(code, verifier)
-    except HTTPException:
+    except HTTPException as http_e:
         # Re-raise HTTPExceptions (like missing credentials) as-is
+        logger.error(f"OAuth HTTP error: {http_e.detail}")
         raise
     except Exception as e:
-        logger.error(f"OAuth token exchange failed: {e}")
+        logger.error(f"OAuth token exchange failed: {type(e).__name__}", exc_info=True)
         # Check if it's a configuration issue
         if "GOOGLE_CLIENT_ID" in str(e) or "GOOGLE_CLIENT_SECRET" in str(e):
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Google OAuth is not properly configured. Please contact the administrator.",
             )
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Failed to authenticate with Google: {str(e)}",
-        )
+        # Check for common OAuth errors
+        error_msg = str(e).lower()
+        if "invalid_grant" in error_msg:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="The authorization code has expired or is invalid. Please try again.",
+            )
+        elif "redirect_uri_mismatch" in error_msg:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="OAuth redirect URI mismatch. Please contact the administrator.",
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Failed to authenticate with Google: {str(e)}",
+            )
 
     # Extract user information
     provider_sub = userinfo.get("sub")
