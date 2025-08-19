@@ -1,0 +1,94 @@
+name: Smart Path Filtering
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      docker: ${{ steps.filter.outputs.docker }}
+      workflows: ${{ steps.filter.outputs.workflows }}
+    steps:
+    - uses: actions/checkout@v4
+    
+    - uses: dorny/paths-filter@v3
+      id: filter
+      with:
+        filters: |
+          backend:
+            - 'backend/**'
+            - 'pyproject.toml'
+            - 'requirements*.txt'
+          frontend:
+            - 'frontend/**'
+            - 'package*.json'
+            - 'tsconfig.json'
+            - 'next.config.js'
+          docker:
+            - '**/Dockerfile*'
+            - 'docker-compose*.yml'
+            - '.dockerignore'
+          workflows:
+            - '.github/workflows/**'
+    
+    - name: Report detected changes
+      run: |
+        echo "## 🔍 Change Detection Report" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Component | Changed | Action |" >> $GITHUB_STEP_SUMMARY
+        echo "|-----------|---------|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| Backend | ${{ steps.filter.outputs.backend }} | $([ "${{ steps.filter.outputs.backend }}" == "true" ] && echo "✅ Will test" || echo "⏭️ Skip tests") |" >> $GITHUB_STEP_SUMMARY
+        echo "| Frontend | ${{ steps.filter.outputs.frontend }} | $([ "${{ steps.filter.outputs.frontend }}" == "true" ] && echo "✅ Will test" || echo "⏭️ Skip tests") |" >> $GITHUB_STEP_SUMMARY
+        echo "| Docker | ${{ steps.filter.outputs.docker }} | $([ "${{ steps.filter.outputs.docker }}" == "true" ] && echo "🐳 Rebuild" || echo "⏭️ Skip build") |" >> $GITHUB_STEP_SUMMARY
+        echo "| Workflows | ${{ steps.filter.outputs.workflows }} | $([ "${{ steps.filter.outputs.workflows }}" == "true" ] && echo "🔧 CI Updated" || echo "No changes") |" >> $GITHUB_STEP_SUMMARY
+
+  backend-quick-test:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v3
+      with:
+        enable-cache: true
+        cache-dependency-glob: 'backend/pyproject.toml'
+    
+    - name: Quick lint check
+      working-directory: ./backend
+      run: |
+        uv venv
+        source .venv/bin/activate
+        uv pip install ruff black
+        ruff check app tests --select=E,F
+        black --check app tests --fast
+
+  frontend-quick-test:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Quick type check
+      working-directory: ./frontend
+      run: |
+        npm ci
+        npm run type-check

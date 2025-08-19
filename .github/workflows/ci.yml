@@ -3,10 +3,25 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [main, develop]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.gitignore'
+      - 'LICENSE'
   pull_request:
     branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.gitignore'
+      - 'LICENSE'
   release:
     types: [created]
+
+# Cancel in-progress runs when a new run is queued
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   REGISTRY: ghcr.io
@@ -46,17 +61,24 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: '3.12'
-        cache: 'pip'
     
-    - name: Install dependencies
+    - name: Install uv
+      uses: astral-sh/setup-uv@v3
+      with:
+        enable-cache: true
+        cache-dependency-glob: 'backend/pyproject.toml'
+    
+    - name: Install dependencies with uv
       working-directory: ./backend
       run: |
-        pip install --upgrade pip
-        pip install -e .[dev]
+        uv venv
+        source .venv/bin/activate
+        uv pip install -e .[dev]
     
     - name: Run linting
       working-directory: ./backend
       run: |
+        source .venv/bin/activate
         ruff check app tests
         black --check app tests
         mypy app
@@ -68,6 +90,7 @@ jobs:
         REDIS_URL: redis://localhost:6379/0
         JWT_SECRET: test-secret
       run: |
+        source .venv/bin/activate
         pytest tests/ -v --cov=app --cov-report=xml --cov-report=term
     
     - name: Upload coverage to Codecov
@@ -90,6 +113,17 @@ jobs:
         node-version: '20'
         cache: 'npm'
         cache-dependency-path: frontend/package-lock.json
+    
+    - name: Cache Next.js build
+      uses: actions/cache@v4
+      with:
+        path: |
+          frontend/.next/cache
+          frontend/.next/.next
+        key: ${{ runner.os }}-nextjs-${{ hashFiles('frontend/package-lock.json') }}-${{ hashFiles('frontend/**/*.js', 'frontend/**/*.jsx', 'frontend/**/*.ts', 'frontend/**/*.tsx') }}
+        restore-keys: |
+          ${{ runner.os }}-nextjs-${{ hashFiles('frontend/package-lock.json') }}-
+          ${{ runner.os }}-nextjs-
     
     - name: Install dependencies
       working-directory: ./frontend
