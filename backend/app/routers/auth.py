@@ -1,6 +1,7 @@
 """Authentication routes for OAuth2 login"""
 
 import logging
+import os
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.responses import RedirectResponse
@@ -23,6 +24,27 @@ from ..security import TokenData, create_access_token, create_refresh_token, get
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+
+@router.get("/config/status")
+async def oauth_config_status():
+    """Check OAuth configuration status (for debugging)"""
+    google_client_id = os.getenv("GOOGLE_CLIENT_ID", "")
+    google_client_secret = os.getenv("GOOGLE_CLIENT_SECRET", "")
+
+    return {
+        "google_oauth_configured": bool(google_client_id and google_client_secret),
+        "client_id_set": bool(google_client_id),
+        "client_secret_set": bool(google_client_secret),
+        "redirect_uri": os.getenv(
+            "GOOGLE_OAUTH_REDIRECT_URI", "http://localhost:3000/api/backend/auth/callback/google"
+        ),
+        "message": (
+            "OAuth is properly configured"
+            if google_client_id and google_client_secret
+            else "OAuth credentials are missing. See docs for setup instructions."
+        ),
+    }
 
 
 @router.get("/login/google")
