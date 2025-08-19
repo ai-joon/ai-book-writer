@@ -145,8 +145,8 @@ async def test_unhandled_exception_handler():
     assert "dangerous internal error" not in data["message"]
     assert "api_key_123" not in str(data)
 
-    # Should log the full error for debugging
-    mock_logger.error.assert_called_once()
+    # Should log the full error for debugging (using exception method for stack traces)
+    mock_logger.exception.assert_called_once()
 
 
 def test_exception_handlers_integration_with_request_id():

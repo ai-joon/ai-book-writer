@@ -1,12 +1,14 @@
 """Main FastAPI application for sopher.ai"""
 
 import json
-import logging
 import os
+import time
+import uuid
 from contextlib import asynccontextmanager
+from typing import Callable
 
 import litellm
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI, Request, Response, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -15,17 +17,13 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from .cache import cache
 from .db import close_db, init_db
 from .errors import ErrorCode, api_error
+from .logging import clear_request_context, parse_trace_context, set_request_context, setup_logging
 from .metrics import MetricsTracker, metrics_router
-from .middleware import RequestIDMiddleware
 from .routers import auth, outline
 from .security import create_access_token
 
-# Configure logging
-logging.basicConfig(
-    level=os.getenv("LOG_LEVEL", "INFO"),
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-)
-logger = logging.getLogger(__name__)
+# Configure structured logging early
+logger = setup_logging()
 
 # Configure LiteLLM
 # For LiteLLM 1.48.x, use string type for cache configuration
@@ -83,8 +81,8 @@ app.add_middleware(
     expose_headers=["X-Total-Count", "X-Request-ID"],
 )
 
-# Request ID middleware
-app.add_middleware(RequestIDMiddleware)
+# Request ID middleware (disabled in favor of our new logging middleware)
+# app.add_middleware(RequestIDMiddleware)
 
 
 # Exception handlers
@@ -104,6 +102,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     body = json.loads(response.body)
     logger.error(
         "validation error",
+        exc_info=True,
         extra={
             "error_id": body["error_id"],
             "request_id": body["request_id"],
@@ -137,6 +136,7 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     body = json.loads(response.body)
     logger.error(
         "http error",
+        exc_info=True,
         extra={
             "error_id": body["error_id"],
             "request_id": body["request_id"],
@@ -162,8 +162,8 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
         status=status.HTTP_500_INTERNAL_SERVER_ERROR,
     )
     body = json.loads(response.body)
-    logger.error(
-        f"unhandled error: {exc}",
+    logger.exception(
+        "unhandled error",
         extra={
             "error_id": body["error_id"],
             "request_id": body["request_id"],
@@ -174,6 +174,93 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
         },
     )
     return response
+
+
+# Request logging middleware
+@app.middleware("http")
+async def log_requests(request: Request, call_next: Callable) -> Response:
+    """Log all HTTP requests with GCP-compatible structured logging."""
+    # Start timer
+    start_time = time.time()
+
+    # Extract or generate request ID
+    request_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
+
+    # Extract trace context if present
+    trace_header = request.headers.get("X-Cloud-Trace-Context")
+    trace_id = None
+    span_id = None
+    if trace_header:
+        trace_id, span_id = parse_trace_context(trace_header)
+
+    # Get request details
+    method = request.method
+    url = str(request.url)
+    user_agent = request.headers.get("User-Agent", "")
+    referer = request.headers.get("Referer", "")
+
+    # Get client IP (considering proxy headers)
+    forwarded_for = request.headers.get("X-Forwarded-For")
+    if forwarded_for:
+        remote_ip = forwarded_for.split(",")[0].strip()
+    else:
+        remote_ip = request.client.host if request.client else ""
+
+    # Set context for this request
+    set_request_context(
+        request_id=request_id,
+        trace_id=trace_id,
+        span_id=span_id,
+    )
+
+    # Store request ID in request state for other middleware
+    request.state.request_id = request_id
+
+    try:
+        # Process the request
+        response = await call_next(request)
+
+        # Calculate latency
+        latency = time.time() - start_time
+
+        # Determine severity based on status code
+        if response.status_code >= 500:
+            severity = "ERROR"
+        elif response.status_code >= 400:
+            severity = "WARNING"
+        else:
+            severity = "INFO"
+
+        # Build HTTP request info for logging
+        http_request_info = {
+            "requestMethod": method,
+            "requestUrl": url,
+            "status": response.status_code,
+            "userAgent": user_agent,
+            "remoteIp": remote_ip,
+            "referer": referer,
+            "latency": f"{latency:.3f}s",
+        }
+
+        # Update context with HTTP request info
+        set_request_context(http_request=http_request_info)
+
+        # Log the request
+        if severity == "ERROR":
+            logger.error("request completed", extra={"http_status": response.status_code})
+        elif severity == "WARNING":
+            logger.warning("request completed", extra={"http_status": response.status_code})
+        else:
+            logger.info("request completed", extra={"http_status": response.status_code})
+
+        # Add request ID to response headers
+        response.headers["X-Request-ID"] = request_id
+
+        return response  # type: ignore[no-any-return]
+
+    finally:
+        # Clear context after request
+        clear_request_context()
 
 
 # Health check endpoints
