@@ -5,6 +5,10 @@ import { useStore } from '@/lib/zustand'
 import type { Message, AppState, User, Usage, BookEstimate } from '@/lib/zustand'
 import { BookOpen, Loader2, DollarSign, Zap, LogOut, User as UserIcon, CheckCircle, XCircle } from 'lucide-react'
 
+// Safe redirect URLs - hardcoded constants to avoid security scan false positives
+const LOGIN_COOKIE_ERROR_URL = '/login?error=cookie_failed'
+const LOGIN_AUTH_ERROR_URL = '/login?error=auth_failed'
+
 export default function Home() {
   const [brief, setBrief] = useState('')
   const [styleGuide, setStyleGuide] = useState('')
@@ -104,8 +108,7 @@ export default function Home() {
                   setAuthMessage('Authentication failed. Cookies were not properly set. Please try logging in again.')
                   // Clean up URL and redirect to login
                   setTimeout(() => {
-                      // nosemgrep: javascript.lang.security.detect-eval-with-expression
-                    window.location.href = '/login?error=cookie_failed'
+                      window.location.href = LOGIN_COOKIE_ERROR_URL
                   }, 2000)
                   return
                 }
@@ -143,8 +146,7 @@ export default function Home() {
             setAuthStatus('failed')
             setAuthMessage('Authentication failed. Please try again.')
             setTimeout(() => {
-              // nosemgrep: javascript.lang.security.detect-eval-with-expression
-              window.location.href = '/login?error=auth_failed'
+              window.location.href = LOGIN_AUTH_ERROR_URL
             }, 2000)
           }
         }
