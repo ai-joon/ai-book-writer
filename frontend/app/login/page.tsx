@@ -5,9 +5,9 @@ import { BookOpen } from 'lucide-react'
 export default function LoginPage() {
 
   const handleGoogleLogin = () => {
-    // Redirect directly to backend OAuth endpoint
-    // This avoids proxy path issues and ensures correct OAuth flow
-    window.location.href = 'https://api.sopher.ai/auth/login/google'
+    // Use relative URL to go through frontend proxy
+    // This ensures cookies are set on the correct domain
+    window.location.href = '/api/backend/auth/login/google'
   }
 
   return (
