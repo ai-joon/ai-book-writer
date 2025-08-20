@@ -165,13 +165,22 @@ def set_auth_cookies(
 ) -> None:
     """Set authentication cookies with appropriate security settings"""
     import logging
+    import os
 
     logger = logging.getLogger(__name__)
 
-    # Determine if we're in production based on the request
-    # When proxied through frontend, check the original host header
+    # Determine if we're in production based on environment or request headers
+    # Priority: environment variable > host header
+    env = os.getenv("ENVIRONMENT", "development")
     host = request.headers.get("host", "")
-    is_production = "localhost" not in host and "127.0.0.1" not in host
+    x_forwarded_host = request.headers.get("x-forwarded-host", "")
+
+    # Check environment variable first, then headers
+    is_production = (
+        env == "production"
+        or ("localhost" not in host and "127.0.0.1" not in host)
+        or "sopher.ai" in x_forwarded_host
+    )
 
     # Extract domain from host for cookie setting
     # For proxied requests, cookies should be set for the frontend domain
@@ -189,7 +198,8 @@ def set_auth_cookies(
             domain = ".sopher.ai"  # Allow access from all sopher.ai subdomains
 
     logger.info(
-        f"Setting auth cookies - host: {host}, domain: {domain}, production: {is_production}"
+        f"Setting auth cookies - host: {host}, x_forwarded_host: {x_forwarded_host}, "
+        f"domain: {domain}, production: {is_production}, env: {env}"
     )
 
     # Set access token cookie (1 hour)
@@ -222,11 +232,20 @@ def set_auth_cookies(
 def clear_auth_cookies(response: Response, request: Request) -> None:
     """Clear authentication cookies"""
     import logging
+    import os
 
     logger = logging.getLogger(__name__)
 
+    # Use same production detection as set_auth_cookies
+    env = os.getenv("ENVIRONMENT", "development")
     host = request.headers.get("host", "")
-    is_production = "localhost" not in host and "127.0.0.1" not in host
+    x_forwarded_host = request.headers.get("x-forwarded-host", "")
+
+    is_production = (
+        env == "production"
+        or ("localhost" not in host and "127.0.0.1" not in host)
+        or "sopher.ai" in x_forwarded_host
+    )
 
     # Match domain setting from set_auth_cookies
     domain = None
@@ -247,7 +266,7 @@ def clear_auth_cookies(response: Response, request: Request) -> None:
         path="/",
         secure=is_production,
         httponly=False,
-        samesite="lax",
+        samesite="none" if is_production else "lax",  # Match the setting logic
         domain=domain,
     )
 
@@ -257,6 +276,6 @@ def clear_auth_cookies(response: Response, request: Request) -> None:
         path="/",
         secure=is_production,
         httponly=True,
-        samesite="lax",
+        samesite="none" if is_production else "lax",  # Match the setting logic
         domain=domain,
     )

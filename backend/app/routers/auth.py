@@ -67,7 +67,6 @@ async def login_google():
 @router.head("/callback/google")  # Support HEAD requests for health checks
 async def callback_google(
     request: Request,
-    response: Response,
     code: Optional[str] = None,
     state: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
@@ -179,11 +178,8 @@ async def callback_google(
     access_token = create_access_token(token_data)
     refresh_token = create_refresh_token(token_data)
 
-    # Set cookies and redirect to frontend
-    set_auth_cookies(response, access_token, refresh_token, request)
-
     # Log successful authentication
-    logger.info(f"User {user.email} authenticated successfully, setting cookies")
+    logger.info(f"User {user.email} authenticated successfully, preparing to set cookies")
 
     # Redirect to frontend home page with proper host validation
     # When proxied through frontend, use the host header but validate it first
@@ -244,7 +240,12 @@ async def callback_google(
     else:
         frontend_url += "&oauth=success"
 
-    return RedirectResponse(url=frontend_url, status_code=status.HTTP_302_FOUND)
+    # Create redirect response and set cookies on it
+    redirect_response = RedirectResponse(url=frontend_url, status_code=status.HTTP_302_FOUND)
+    set_auth_cookies(redirect_response, access_token, refresh_token, request)
+
+    logger.info(f"Setting cookies and redirecting to {frontend_url}")
+    return redirect_response
 
 
 @router.post("/logout")
