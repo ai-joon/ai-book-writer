@@ -153,8 +153,8 @@ class TestCookieDomainBehavior:
         access_cookie = next(c for c in cookies if "access_token" in c)
         assert "Secure" in access_cookie  # Must be secure in production
         assert (
-            "SameSite=none" in access_cookie or "SameSite=None" in access_cookie
-        )  # For cross-origin
+            "SameSite=lax" in access_cookie or "SameSite=Lax" in access_cookie
+        )  # Using lax for security
         assert "HttpOnly" not in access_cookie
         assert "Path=/" in access_cookie
         assert "Domain=sopher.ai" in access_cookie
@@ -162,7 +162,7 @@ class TestCookieDomainBehavior:
         # Check refresh_token cookie
         refresh_cookie = next(c for c in cookies if "refresh_token" in c)
         assert "Secure" in refresh_cookie
-        assert "SameSite=none" in refresh_cookie or "SameSite=None" in refresh_cookie
+        assert "SameSite=lax" in refresh_cookie or "SameSite=Lax" in refresh_cookie
         assert "HttpOnly" in refresh_cookie
         assert "Path=/" in refresh_cookie
         assert "Domain=sopher.ai" in refresh_cookie
@@ -226,7 +226,7 @@ class TestCookieDomainBehavior:
                 domain="sopher.ai",
                 secure=True,
                 httponly=False,
-                samesite="none",
+                samesite="lax",
             )
             response_clear.set_cookie(
                 key="refresh_token",
@@ -236,7 +236,7 @@ class TestCookieDomainBehavior:
                 domain="sopher.ai",
                 secure=True,
                 httponly=True,
-                samesite="none",
+                samesite="lax",
             )
 
         clear_cookies = response_clear.headers.getlist("set-cookie")
@@ -265,8 +265,8 @@ class TestCookieDomainBehavior:
         for cookie in cookies:
             assert "Domain=sopher.ai" in cookie
             assert (
-                "SameSite=none" in cookie or "SameSite=None" in cookie
-            )  # Required for cross-origin
+                "SameSite=lax" in cookie or "SameSite=Lax" in cookie
+            )  # Using lax for security
             assert "Secure" in cookie  # Required with SameSite=None
 
     def test_port_handling_in_development(self):
