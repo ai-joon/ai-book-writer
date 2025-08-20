@@ -11,15 +11,23 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-indigo-700 to-purple-800 flex items-center justify-center px-4">
+    <div 
+      className="min-h-screen flex items-center justify-center px-4"
+      style={{
+        backgroundImage: 'url(/login-pattern-geometric.svg)',
+        backgroundRepeat: 'repeat',
+        backgroundSize: '60px 60px',
+        backgroundColor: '#f8fafc'
+      }}
+    >
       <div className="max-w-md w-full">
-        <div className="bg-indigo-950/40 backdrop-blur-lg rounded-lg shadow-2xl p-8 border border-indigo-800/30">
+        <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl p-8 border border-gray-200">
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
-              <BookOpen className="h-12 w-12 text-yellow-300" />
+              <BookOpen className="h-12 w-12 text-indigo-600" />
             </div>
-            <h1 className="text-3xl font-bold text-yellow-300 mb-2">sopher.ai</h1>
-            <p className="text-indigo-200">AI-Powered Book Writing System</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">sopher.ai</h1>
+            <p className="text-gray-600">AI-Powered Book Writing System</p>
           </div>
 
           <div className="space-y-4">
@@ -50,7 +58,7 @@ export default function LoginPage() {
           </div>
 
           <div className="mt-6 text-center">
-            <p className="text-indigo-200 text-sm">
+            <p className="text-gray-500 text-sm">
               By signing in, you agree to our Terms of Service and Privacy Policy.
             </p>
           </div>

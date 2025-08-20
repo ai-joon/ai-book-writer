@@ -344,3 +344,4 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 # Allow committing frontend library files
 !frontend/lib/
 !frontend/lib/**
+oauth-secret-backup-*.yaml
