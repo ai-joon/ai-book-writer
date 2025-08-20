@@ -264,9 +264,7 @@ class TestCookieDomainBehavior:
         # Cookies should be set with domain=sopher.ai to work across subdomains
         for cookie in cookies:
             assert "Domain=sopher.ai" in cookie
-            assert (
-                "SameSite=lax" in cookie or "SameSite=Lax" in cookie
-            )  # Using lax for security
+            assert "SameSite=lax" in cookie or "SameSite=Lax" in cookie  # Using lax for security
             assert "Secure" in cookie  # Required with SameSite=None
 
     def test_port_handling_in_development(self):
