@@ -174,20 +174,30 @@ def set_auth_cookies(
     env = os.getenv("ENVIRONMENT", "development")
     host = request.headers.get("host", "")
     x_forwarded_host = request.headers.get("x-forwarded-host", "")
+    x_forwarded_proto = request.headers.get("x-forwarded-proto", "")
 
-    # Check environment variable first, then headers
+    # Enhanced production detection
     is_production = (
         env == "production"
-        or ("localhost" not in host and "127.0.0.1" not in host)
+        or x_forwarded_proto == "https"  # Behind HTTPS proxy
+        or "sopher.ai" in host
         or "sopher.ai" in x_forwarded_host
     )
+
+    # Override for local testing
+    if "localhost" in host or "127.0.0.1" in host:
+        is_production = False
 
     # Extract domain from host for cookie setting
     # For proxied requests, cookies should be set for the frontend domain
     domain = None
-    if host:
+
+    # Use x-forwarded-host if available (when behind proxy)
+    effective_host = x_forwarded_host or host
+
+    if effective_host:
         # Remove port if present
-        domain_parts = host.split(":")
+        domain_parts = effective_host.split(":")
         domain = domain_parts[0]
 
         # For localhost, don't set domain (allows cookie on any port)
@@ -195,38 +205,54 @@ def set_auth_cookies(
             domain = None
         # For production, always use .sopher.ai for both api.sopher.ai and sopher.ai
         elif "sopher.ai" in domain:
-            domain = ".sopher.ai"  # Allow access from all sopher.ai subdomains
+            # Use the root domain for maximum compatibility
+            domain = "sopher.ai"  # Without leading dot for better compatibility
 
     logger.info(
         f"Setting auth cookies - host: {host}, x_forwarded_host: {x_forwarded_host}, "
-        f"domain: {domain}, production: {is_production}, env: {env}"
+        f"x_forwarded_proto: {x_forwarded_proto}, domain: {domain}, "
+        f"production: {is_production}, env: {env}"
     )
 
     # Set access token cookie (1 hour)
     # Not using HttpOnly so Next.js middleware can read it for auth checks
     # The token itself has expiry and we use refresh tokens for security
-    response.set_cookie(
-        key="access_token",
-        value=access_token,
-        max_age=3600,
-        httponly=False,  # Allow Next.js middleware to read for auth checks
-        samesite="none" if is_production else "lax",  # None for cross-domain in production
-        secure=is_production,  # Required when samesite=none
-        path="/",
-        domain=domain,  # None for localhost, ".sopher.ai" for production
-    )
+    try:
+        response.set_cookie(
+            key="access_token",
+            value=access_token,
+            max_age=3600,
+            httponly=False,  # Allow Next.js middleware to read for auth checks
+            samesite="lax" if not is_production else "none",  # Lax for better compatibility
+            secure=is_production,  # Required when samesite=none
+            path="/",
+            domain=domain,  # None for localhost, "sopher.ai" for production
+        )
+        logger.info(
+            f"Access token cookie set successfully - domain: {domain}, "
+            f"secure: {is_production}"
+        )
+    except Exception as e:
+        logger.error(f"Failed to set access token cookie: {e}")
 
     # Set refresh token cookie (7 days)
-    response.set_cookie(
-        key="refresh_token",
-        value=refresh_token,
-        max_age=7 * 24 * 3600,
-        httponly=True,  # Keep refresh token httponly for security
-        samesite="none" if is_production else "lax",  # None for cross-domain in production
-        secure=is_production,  # Required when samesite=none
-        path="/",
-        domain=domain,  # None for localhost, ".sopher.ai" for production
-    )
+    try:
+        response.set_cookie(
+            key="refresh_token",
+            value=refresh_token,
+            max_age=7 * 24 * 3600,
+            httponly=True,  # Keep refresh token httponly for security
+            samesite="lax" if not is_production else "none",  # Lax for better compatibility
+            secure=is_production,  # Required when samesite=none
+            path="/",
+            domain=domain,  # None for localhost, "sopher.ai" for production
+        )
+        logger.info(
+            f"Refresh token cookie set successfully - domain: {domain}, "
+            f"secure: {is_production}"
+        )
+    except Exception as e:
+        logger.error(f"Failed to set refresh token cookie: {e}")
 
 
 def clear_auth_cookies(response: Response, request: Request) -> None:
@@ -240,23 +266,30 @@ def clear_auth_cookies(response: Response, request: Request) -> None:
     env = os.getenv("ENVIRONMENT", "development")
     host = request.headers.get("host", "")
     x_forwarded_host = request.headers.get("x-forwarded-host", "")
+    x_forwarded_proto = request.headers.get("x-forwarded-proto", "")
 
     is_production = (
         env == "production"
-        or ("localhost" not in host and "127.0.0.1" not in host)
+        or x_forwarded_proto == "https"
+        or "sopher.ai" in host
         or "sopher.ai" in x_forwarded_host
     )
 
+    if "localhost" in host or "127.0.0.1" in host:
+        is_production = False
+
     # Match domain setting from set_auth_cookies
     domain = None
-    if host:
-        domain_parts = host.split(":")
+    effective_host = x_forwarded_host or host
+
+    if effective_host:
+        domain_parts = effective_host.split(":")
         domain = domain_parts[0]
 
         if "localhost" in domain or "127.0.0.1" in domain:
             domain = None
         elif "sopher.ai" in domain:
-            domain = ".sopher.ai"
+            domain = "sopher.ai"
 
     logger.info(f"Clearing auth cookies - host: {host}, domain: {domain}")
 
@@ -266,7 +299,7 @@ def clear_auth_cookies(response: Response, request: Request) -> None:
         path="/",
         secure=is_production,
         httponly=False,
-        samesite="none" if is_production else "lax",  # Match the setting logic
+        samesite="lax" if not is_production else "none",  # Match the setting logic
         domain=domain,
     )
 
@@ -276,6 +309,6 @@ def clear_auth_cookies(response: Response, request: Request) -> None:
         path="/",
         secure=is_production,
         httponly=True,
-        samesite="none" if is_production else "lax",  # Match the setting logic
+        samesite="lax" if not is_production else "none",  # Match the setting logic
         domain=domain,
     )

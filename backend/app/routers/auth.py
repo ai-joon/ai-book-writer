@@ -27,6 +27,61 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
+def _get_frontend_url(request: Request) -> str:
+    """Extract and validate frontend URL from request headers"""
+    host = request.headers.get("host", "")
+    origin = request.headers.get("origin", "")
+    referer = request.headers.get("referer", "")
+
+    logger.info(f"Determining frontend URL - host: {host}, origin: {origin}, referer: {referer}")
+
+    # Define allowed hosts to prevent SSRF attacks
+    allowed_hosts = {
+        "localhost:3000",
+        "localhost:3001",
+        "127.0.0.1:3000",
+        "sopher.ai",
+        "api.sopher.ai",
+        "www.sopher.ai",
+    }
+
+    # Validate and determine the frontend URL
+    if host:
+        # Extract hostname without port for validation
+        hostname = host.split(":")[0] if ":" in host else host
+
+        # Check if it's a localhost development environment
+        if hostname in ["localhost", "127.0.0.1"]:
+            # For localhost, preserve the port from the host header
+            if ":" in host:
+                port = host.split(":")[1]
+                # Validate port is numeric and within valid range (1-65535)
+                try:
+                    port_num = int(port)
+                    if 1 <= port_num <= 65535:
+                        return f"http://localhost:{port}/"
+                    else:
+                        # Invalid port range, use default
+                        return "http://localhost:3000/"
+                except ValueError:
+                    # Non-numeric port, use default
+                    return "http://localhost:3000/"
+            else:
+                return "http://localhost:3000/"
+
+        # Check if it's an allowed production host
+        elif host in allowed_hosts or hostname in ["sopher.ai", "api.sopher.ai"]:
+            # Always redirect to main domain for production
+            return "https://sopher.ai/"
+        else:
+            # Unrecognized host - use safe default
+            logger.warning(f"Unrecognized host header: {host}")
+            return "https://sopher.ai/"
+    else:
+        # No host header - use production URL as fallback
+        return "https://sopher.ai/"
+
+
 @router.get("/config/status")
 async def oauth_config_status():
     """Check OAuth configuration status (for debugging)"""
@@ -69,6 +124,8 @@ async def callback_google(
     request: Request,
     code: Optional[str] = None,
     state: Optional[str] = None,
+    error: Optional[str] = None,
+    error_description: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
 ):
     """Handle Google OAuth2 callback"""
@@ -76,13 +133,27 @@ async def callback_google(
     if request.method == "HEAD":
         return Response(status_code=status.HTTP_200_OK)
 
+    # Log all callback parameters for debugging
+    logger.info(
+        f"OAuth callback received - code: {bool(code)}, state: {bool(state)}, "
+        f"error: {error}"
+    )
+
+    # Handle OAuth errors from Google
+    if error:
+        logger.error(f"OAuth error from Google: {error} - {error_description}")
+        # Redirect to frontend with error
+        frontend_url = _get_frontend_url(request)
+        error_url = f"{frontend_url}?oauth=error&error={error}"
+        return RedirectResponse(url=error_url, status_code=status.HTTP_302_FOUND)
+
     # Validate required parameters
     if not code or not state:
         logger.error(f"Missing OAuth parameters - code: {bool(code)}, state: {bool(state)}")
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Missing required OAuth parameters: code and state",
-        )
+        # Redirect to frontend with error instead of raising exception
+        frontend_url = _get_frontend_url(request)
+        error_url = f"{frontend_url}?oauth=error&error=missing_parameters"
+        return RedirectResponse(url=error_url, status_code=status.HTTP_302_FOUND)
 
     # Validate state and get PKCE verifier
     try:
@@ -178,73 +249,33 @@ async def callback_google(
     access_token = create_access_token(token_data)
     refresh_token = create_refresh_token(token_data)
 
-    # Log successful authentication
-    logger.info(f"User {user.email} authenticated successfully, preparing to set cookies")
+    # Log successful authentication with more details
+    logger.info(f"User {user.email} authenticated successfully")
+    logger.info(f"User details - ID: {user.id}, Role: {user.role}, Provider: {user.provider}")
 
-    # Redirect to frontend home page with proper host validation
-    # When proxied through frontend, use the host header but validate it first
-    host = request.headers.get("host", "")
-    origin = request.headers.get("origin", "")
-    referer = request.headers.get("referer", "")
-    logger.info(f"OAuth callback headers - host: {host}, origin: {origin}, referer: {referer}")
-
-    # Define allowed hosts to prevent SSRF attacks
-    allowed_hosts = {
-        "localhost:3000",
-        "localhost:3001",
-        "127.0.0.1:3000",
-        "sopher.ai",
-        "api.sopher.ai",
-        "www.sopher.ai",
-    }
-
-    # Validate and determine the frontend URL
-    if host:
-        # Extract hostname without port for validation
-        hostname = host.split(":")[0] if ":" in host else host
-
-        # Check if it's a localhost development environment
-        if hostname in ["localhost", "127.0.0.1"]:
-            # For localhost, preserve the port from the host header
-            if ":" in host:
-                port = host.split(":")[1]
-                # Validate port is numeric and within valid range (1-65535)
-                try:
-                    port_num = int(port)
-                    if 1 <= port_num <= 65535:
-                        frontend_url = f"http://localhost:{port}/"
-                    else:
-                        # Invalid port range, use default
-                        frontend_url = "http://localhost:3000/"
-                except ValueError:
-                    # Non-numeric port, use default
-                    frontend_url = "http://localhost:3000/"
-            else:
-                frontend_url = "http://localhost:3000/"
-
-        # Check if it's an allowed production host
-        elif host in allowed_hosts or hostname in ["sopher.ai", "api.sopher.ai"]:
-            # Always redirect to main domain for production
-            frontend_url = "https://sopher.ai/"
-        else:
-            # Unrecognized host - use safe default
-            logger.warning(f"Unrecognized host header: {host}")
-            frontend_url = "https://sopher.ai/"
-    else:
-        # No host header - use production URL as fallback
-        frontend_url = "https://sopher.ai/"
-
-    # Add query parameter to help frontend identify OAuth redirect
-    if "?" not in frontend_url:
-        frontend_url += "?oauth=success"
-    else:
-        frontend_url += "&oauth=success"
+    # Get frontend URL using helper function
+    frontend_url = _get_frontend_url(request)
+    frontend_url += "?oauth=success"
 
     # Create redirect response and set cookies on it
     redirect_response = RedirectResponse(url=frontend_url, status_code=status.HTTP_302_FOUND)
     set_auth_cookies(redirect_response, access_token, refresh_token, request)
 
-    logger.info(f"Setting cookies and redirecting to {frontend_url}")
+    logger.info(f"OAuth flow complete - Setting cookies and redirecting to {frontend_url}")
+    logger.info(
+        f"Cookie details - Access token length: {len(access_token)}, "
+        f"Refresh token length: {len(refresh_token)}"
+    )
+
+    # Add debug headers in development
+    debug_mode = (
+        os.getenv("ENVIRONMENT", "development") == "development"
+        or os.getenv("DEBUG_AUTH") == "true"
+    )
+    if debug_mode:
+        redirect_response.headers["X-Auth-Status"] = "success"
+        redirect_response.headers["X-User-Email"] = str(user.email)
+
     return redirect_response
 
 

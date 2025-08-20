@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useStore } from '@/lib/zustand'
 import type { Message, AppState, User, Usage, BookEstimate } from '@/lib/zustand'
-import { BookOpen, Loader2, DollarSign, Zap, LogOut, User as UserIcon } from 'lucide-react'
+import { BookOpen, Loader2, DollarSign, Zap, LogOut, User as UserIcon, CheckCircle, XCircle } from 'lucide-react'
 
 export default function Home() {
   const [brief, setBrief] = useState('')
@@ -11,6 +11,8 @@ export default function Home() {
   const [targetChapters, setTargetChapters] = useState(10)
   const [model, setModel] = useState('gpt-5')
   const [streamedContent, setStreamedContent] = useState('')
+  const [authStatus, setAuthStatus] = useState<'checking' | 'success' | 'failed' | null>(null)
+  const [authMessage, setAuthMessage] = useState<string | null>(null)
   const [errorInfo, setErrorInfo] = useState<
     | null
     | {
@@ -40,23 +42,109 @@ export default function Home() {
   useEffect(() => {
     // Check if we're coming from OAuth callback
     const urlParams = new URLSearchParams(window.location.search)
-    const fromOAuth = document.referrer.includes('/api/backend/auth/callback') || urlParams.get('oauth') === 'success'
+    const fromOAuth = urlParams.get('oauth') === 'success'
+    const fromOAuthError = urlParams.get('oauth') === 'error'
+    const errorMessage = urlParams.get('error')
+    
+    // Debug logging
+    if (process.env.NEXT_PUBLIC_DEBUG_AUTH === 'true') {
+      console.log('[Page] OAuth status check:', {
+        fromOAuth,
+        fromOAuthError,
+        errorMessage,
+        cookies: document.cookie,
+        referrer: document.referrer,
+      })
+    }
+    
+    // Handle OAuth error
+    if (fromOAuthError) {
+      setAuthStatus('failed')
+      setAuthMessage(errorMessage || 'Authentication failed. Please try again.')
+      // Clean up URL
+      const newUrl = new URL(window.location.href)
+      newUrl.searchParams.delete('oauth')
+      newUrl.searchParams.delete('error')
+      window.history.replaceState({}, '', newUrl.toString())
+      return
+    }
     
     // Fetch user profile and usage on mount
     const fetchUserData = async () => {
       try {
-        // If coming from OAuth, wait a bit for cookies to propagate
+        // If coming from OAuth, show checking status and wait longer for cookies
         if (fromOAuth) {
-          await new Promise(resolve => setTimeout(resolve, 100))
+          setAuthStatus('checking')
+          setAuthMessage('Verifying authentication...')
+          
+          // Wait longer for cookies to fully propagate
+          await new Promise(resolve => setTimeout(resolve, 500))
+          
+          // First verify cookies are set
+          const verifyResponse = await fetch('/api/backend/auth/verify', {
+            credentials: 'include',
+          })
+          
+          if (verifyResponse.ok) {
+            const verifyData = await verifyResponse.json()
+            if (process.env.NEXT_PUBLIC_DEBUG_AUTH === 'true') {
+              console.log('[Page] Cookie verification:', verifyData)
+            }
+            
+            if (!verifyData.authenticated) {
+              // Cookies not properly set, wait more and retry once
+              await new Promise(resolve => setTimeout(resolve, 1000))
+              const retryResponse = await fetch('/api/backend/auth/verify', {
+                credentials: 'include',
+              })
+              if (retryResponse.ok) {
+                const retryData = await retryResponse.json()
+                if (!retryData.authenticated) {
+                  setAuthStatus('failed')
+                  setAuthMessage('Authentication failed. Cookies were not properly set. Please try logging in again.')
+                  // Clean up URL and redirect to login
+                  setTimeout(() => {
+                    window.location.href = '/login?error=cookie_failed'
+                  }, 2000)
+                  return
+                }
+              }
+            }
+          }
         }
         
         // Fetch user profile
         const userResponse = await fetch('/api/backend/auth/me', {
           credentials: 'include',
         })
+        
         if (userResponse.ok) {
           const userData = await userResponse.json()
           setUser(userData as User)
+          
+          // Show success message if coming from OAuth
+          if (fromOAuth) {
+            setAuthStatus('success')
+            setAuthMessage(`Welcome back, ${userData.name || userData.email}!`)
+            // Clean up URL after successful auth
+            const newUrl = new URL(window.location.href)
+            newUrl.searchParams.delete('oauth')
+            window.history.replaceState({}, '', newUrl.toString())
+            // Clear success message after 3 seconds
+            setTimeout(() => {
+              setAuthStatus(null)
+              setAuthMessage(null)
+            }, 3000)
+          }
+        } else if (userResponse.status === 401) {
+          // Not authenticated
+          if (fromOAuth) {
+            setAuthStatus('failed')
+            setAuthMessage('Authentication failed. Please try again.')
+            setTimeout(() => {
+              window.location.href = '/login?error=auth_failed'
+            }, 2000)
+          }
         }
         
         // Fetch usage data
@@ -69,6 +157,10 @@ export default function Home() {
         }
       } catch (error) {
         console.error('Failed to fetch user data:', error)
+        if (fromOAuth) {
+          setAuthStatus('failed')
+          setAuthMessage('Failed to verify authentication. Please try again.')
+        }
       }
     }
     fetchUserData()
@@ -326,6 +418,20 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="container mx-auto flex-1 px-4 py-8">
+        {/* Authentication Status Messages */}
+        {authStatus && (
+          <div className={`mb-4 border p-4 rounded-lg flex items-center gap-3 ${
+            authStatus === 'checking' ? 'border-blue-200 bg-blue-50 text-blue-800' :
+            authStatus === 'success' ? 'border-green-200 bg-green-50 text-green-800' :
+            'border-red-200 bg-red-50 text-red-800'
+          }`}>
+            {authStatus === 'checking' && <Loader2 className="h-5 w-5 animate-spin" />}
+            {authStatus === 'success' && <CheckCircle className="h-5 w-5" />}
+            {authStatus === 'failed' && <XCircle className="h-5 w-5" />}
+            <span className="font-medium">{authMessage}</span>
+          </div>
+        )}
+        
         {errorInfo && (
           <div className="mb-4 border border-red-200 bg-red-50 text-red-800 p-4 rounded">
             <p className="font-semibold">{errorInfo.message}</p>
