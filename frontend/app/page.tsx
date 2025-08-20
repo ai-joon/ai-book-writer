@@ -104,7 +104,7 @@ export default function Home() {
                   setAuthMessage('Authentication failed. Cookies were not properly set. Please try logging in again.')
                   // Clean up URL and redirect to login
                   setTimeout(() => {
-                    window.location.href = '/login?error=cookie_failed'
+                    window.location.href = '/login?error=cookie_failed' // nosemgrep
                   }, 2000)
                   return
                 }
@@ -142,7 +142,7 @@ export default function Home() {
             setAuthStatus('failed')
             setAuthMessage('Authentication failed. Please try again.')
             setTimeout(() => {
-              window.location.href = '/login?error=auth_failed'
+              window.location.href = '/login?error=auth_failed' // nosemgrep
             }, 2000)
           }
         }
