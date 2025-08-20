@@ -135,8 +135,7 @@ async def callback_google(
 
     # Log all callback parameters for debugging
     logger.info(
-        f"OAuth callback received - code: {bool(code)}, state: {bool(state)}, "
-        f"error: {error}"
+        f"OAuth callback received - code: {bool(code)}, state: {bool(state)}, " f"error: {error}"
     )
 
     # Handle OAuth errors from Google

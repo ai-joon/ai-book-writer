@@ -229,8 +229,7 @@ def set_auth_cookies(
             domain=domain,  # None for localhost, "sopher.ai" for production
         )
         logger.info(
-            f"Access token cookie set successfully - domain: {domain}, "
-            f"secure: {is_production}"
+            f"Access token cookie set successfully - domain: {domain}, " f"secure: {is_production}"
         )
     except Exception as e:
         logger.error(f"Failed to set access token cookie: {e}")
@@ -248,8 +247,7 @@ def set_auth_cookies(
             domain=domain,  # None for localhost, "sopher.ai" for production
         )
         logger.info(
-            f"Refresh token cookie set successfully - domain: {domain}, "
-            f"secure: {is_production}"
+            f"Refresh token cookie set successfully - domain: {domain}, " f"secure: {is_production}"
         )
     except Exception as e:
         logger.error(f"Failed to set refresh token cookie: {e}")
