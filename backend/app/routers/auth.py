@@ -141,9 +141,7 @@ async def callback_google(
     # Log all callback parameters for debugging
     # Sanitize user-provided inputs to prevent log injection
     sanitized_error = (
-        error.replace("\r", "").replace("\n", "").replace("\t", "")
-        if error
-        else error
+        error.replace("\r", "").replace("\n", "").replace("\t", "") if error else error
     )
     sanitized_error_desc = (
         error_description.replace("\r", "").replace("\n", "").replace("\t", "")
@@ -162,7 +160,8 @@ async def callback_google(
         frontend_url = _get_frontend_url(request)
         # URL encode the error to prevent injection
         from urllib.parse import quote
-        error_param = quote(sanitized_error) if sanitized_error else ''
+
+        error_param = quote(sanitized_error) if sanitized_error else ""
         error_url = f"{frontend_url}?oauth=error&error={error_param}"
         return RedirectResponse(url=error_url, status_code=status.HTTP_302_FOUND)
 
