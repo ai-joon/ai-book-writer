@@ -38,9 +38,18 @@ export default function Home() {
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    // Check if we're coming from OAuth callback
+    const urlParams = new URLSearchParams(window.location.search)
+    const fromOAuth = document.referrer.includes('/api/backend/auth/callback') || urlParams.get('oauth') === 'success'
+    
     // Fetch user profile and usage on mount
     const fetchUserData = async () => {
       try {
+        // If coming from OAuth, wait a bit for cookies to propagate
+        if (fromOAuth) {
+          await new Promise(resolve => setTimeout(resolve, 100))
+        }
+        
         // Fetch user profile
         const userResponse = await fetch('/api/backend/auth/me', {
           credentials: 'include',

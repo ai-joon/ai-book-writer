@@ -6,13 +6,14 @@ const publicRoutes = [
   '/login',
   '/_next',
   '/favicon.ico',
+  '/api/backend/auth/callback',  // OAuth callback route
 ]
 
 // Debug mode - set to true to enable logging
 const DEBUG = process.env.NODE_ENV !== 'production'
 
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
+  const { pathname, searchParams } = request.nextUrl
 
   // Log request details in debug mode
   if (DEBUG) {
@@ -24,6 +25,22 @@ export function middleware(request: NextRequest) {
         referer: request.headers.get('referer'),
       }
     })
+  }
+
+  // Special handling for OAuth callback success
+  // When we're redirected from OAuth callback, cookies might be in Set-Cookie headers
+  if (pathname === '/' && (
+    request.headers.get('referer')?.includes('/api/backend/auth/callback') ||
+    searchParams.get('oauth') === 'success'
+  )) {
+    if (DEBUG) console.log('[Middleware] OAuth callback redirect detected, allowing access')
+    // Remove the oauth parameter from URL for cleaner UX
+    if (searchParams.get('oauth') === 'success') {
+      const url = request.nextUrl.clone()
+      url.searchParams.delete('oauth')
+      return NextResponse.redirect(url)
+    }
+    return NextResponse.next()
   }
 
   // Check if this is a public route

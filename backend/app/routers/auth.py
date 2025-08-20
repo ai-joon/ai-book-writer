@@ -238,6 +238,12 @@ async def callback_google(
         # No host header - use production URL as fallback
         frontend_url = "https://sopher.ai/"
 
+    # Add query parameter to help frontend identify OAuth redirect
+    if "?" not in frontend_url:
+        frontend_url += "?oauth=success"
+    else:
+        frontend_url += "&oauth=success"
+
     return RedirectResponse(url=frontend_url, status_code=status.HTTP_302_FOUND)
 
 
