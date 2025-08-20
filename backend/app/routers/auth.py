@@ -134,8 +134,10 @@ async def callback_google(
         return Response(status_code=status.HTTP_200_OK)
 
     # Log all callback parameters for debugging
+    # Sanitize user-provided error to prevent log injection
+    sanitized_error = error.replace('\r', '').replace('\n', '') if error else error
     logger.info(
-        f"OAuth callback received - code: {bool(code)}, state: {bool(state)}, " f"error: {error}"
+        f"OAuth callback received - code: {bool(code)}, state: {bool(state)}, error: {sanitized_error}"
     )
 
     # Handle OAuth errors from Google
