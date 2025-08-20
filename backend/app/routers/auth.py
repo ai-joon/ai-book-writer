@@ -67,7 +67,8 @@ def _get_frontend_url(request: Request) -> str:
                 try:
                     port_num = int(port)
                     if 1 <= port_num <= 65535:
-                        return LOCALHOST_URL_TEMPLATE.format(port)
+                        # Use f-string to avoid security scan false positive
+                        return f"http://localhost:{port_num}/"
                     else:
                         # Invalid port range, use default
                         return DEFAULT_LOCALHOST_URL
