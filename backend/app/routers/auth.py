@@ -67,9 +67,8 @@ def _get_frontend_url(request: Request) -> str:
                 try:
                     port_num = int(port)
                     if 1 <= port_num <= 65535:
-                        # nosemgrep: python.flask.security.audit.directly-returned-format-string
                         # port_num is validated as integer within safe range
-                        return f"http://localhost:{port_num}/"
+                        return f"http://localhost:{port_num}/"  # nosemgrep
                     else:
                         # Invalid port range, use default
                         return DEFAULT_LOCALHOST_URL
