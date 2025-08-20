@@ -28,12 +28,15 @@ logger = logging.getLogger(__name__)
 
 
 def _get_frontend_url(request: Request) -> str:
-    """Extract and validate frontend URL from request headers"""
-    host = request.headers.get("host", "")
-    origin = request.headers.get("origin", "")
-    referer = request.headers.get("referer", "")
+    """Extract and validate frontend URL from request headers.
 
-    logger.info(f"Determining frontend URL - host: {host}, origin: {origin}, referer: {referer}")
+    This function implements strict URL validation to prevent open redirects.
+    Only whitelisted domains are allowed.
+    """
+    host = request.headers.get("host", "")
+
+    # Don't log full URLs to prevent information disclosure
+    logger.info(f"Determining frontend URL - host_present: {bool(host)}")
 
     # Define allowed hosts to prevent SSRF attacks
     allowed_hosts = {
@@ -76,7 +79,8 @@ def _get_frontend_url(request: Request) -> str:
             return "https://sopher.ai/"
         else:
             # Unrecognized host - use safe default
-            logger.warning(f"Unrecognized host header: {host}")
+            # Log without exposing the actual host value
+            logger.warning("Unrecognized host header detected, using default")
             return "https://sopher.ai/"
     else:
         # No host header - use production URL as fallback
@@ -135,18 +139,31 @@ async def callback_google(
         return Response(status_code=status.HTTP_200_OK)
 
     # Log all callback parameters for debugging
-    # Sanitize user-provided error to prevent log injection
-    sanitized_error = error.replace("\r", "").replace("\n", "") if error else error
+    # Sanitize user-provided inputs to prevent log injection
+    sanitized_error = (
+        error.replace("\r", "").replace("\n", "").replace("\t", "")
+        if error
+        else error
+    )
+    sanitized_error_desc = (
+        error_description.replace("\r", "").replace("\n", "").replace("\t", "")
+        if error_description
+        else error_description
+    )
     logger.info(
-        f"OAuth callback - code: {bool(code)}, state: {bool(state)}, error: {sanitized_error}"
+        f"OAuth callback - code_present: {bool(code)}, "
+        f"state_present: {bool(state)}, error: {sanitized_error}"
     )
 
     # Handle OAuth errors from Google
     if error:
-        logger.error(f"OAuth error from Google: {error} - {error_description}")
+        logger.error(f"OAuth error from Google: {sanitized_error} - {sanitized_error_desc}")
         # Redirect to frontend with error
         frontend_url = _get_frontend_url(request)
-        error_url = f"{frontend_url}?oauth=error&error={error}"
+        # URL encode the error to prevent injection
+        from urllib.parse import quote
+        error_param = quote(sanitized_error) if sanitized_error else ''
+        error_url = f"{frontend_url}?oauth=error&error={error_param}"
         return RedirectResponse(url=error_url, status_code=status.HTTP_302_FOUND)
 
     # Validate required parameters

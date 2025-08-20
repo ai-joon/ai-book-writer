@@ -38,7 +38,7 @@ export function middleware(request: NextRequest) {
     if (DEBUG) {
       console.log('[Middleware] OAuth callback redirect detected', {
         referer: request.headers.get('referer'),
-        oauthParam: searchParams.get('oauth'),
+        oauthParamPresent: !!searchParams.get('oauth'),
         cookiesPresent: request.cookies.getAll().map(c => c.name),
       })
     }

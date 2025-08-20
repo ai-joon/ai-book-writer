@@ -223,7 +223,7 @@ def set_auth_cookies(
             value=access_token,
             max_age=3600,
             httponly=False,  # Allow Next.js middleware to read for auth checks
-            samesite="lax" if not is_production else "none",  # Lax for better compatibility
+            samesite="lax",  # Always use lax for security
             secure=is_production,  # Required when samesite=none
             path="/",
             domain=domain,  # None for localhost, "sopher.ai" for production
@@ -241,7 +241,7 @@ def set_auth_cookies(
             value=refresh_token,
             max_age=7 * 24 * 3600,
             httponly=True,  # Keep refresh token httponly for security
-            samesite="lax" if not is_production else "none",  # Lax for better compatibility
+            samesite="lax",  # Always use lax for security
             secure=is_production,  # Required when samesite=none
             path="/",
             domain=domain,  # None for localhost, "sopher.ai" for production
