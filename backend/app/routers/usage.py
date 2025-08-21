@@ -60,8 +60,18 @@ async def get_usage(
 ) -> UsageResponse:
     """Get current user's usage statistics"""
 
+    # Convert user_id string to UUID
+    from uuid import UUID
+    try:
+        user_uuid = UUID(current_user.user_id)
+    except (ValueError, TypeError):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid user ID format",
+        )
+
     # Get user record
-    user_result = await db.execute(select(User).where(User.id == current_user.user_id))
+    user_result = await db.execute(select(User).where(User.id == user_uuid))
     user = user_result.scalar_one_or_none()
 
     if not user:
@@ -74,7 +84,7 @@ async def get_usage(
     total_result = await db.execute(
         select(func.sum(Cost.usd))
         .join(Session, Cost.session_id == Session.id)
-        .where(Session.user_id == current_user.user_id)
+        .where(Session.user_id == user_uuid)
     )
     total_usd = float(total_result.scalar() or 0)
 
@@ -84,7 +94,7 @@ async def get_usage(
         select(func.sum(Cost.usd))
         .join(Session, Cost.session_id == Session.id)
         .where(
-            Session.user_id == current_user.user_id,
+            Session.user_id == user_uuid,
             Cost.created_at >= current_month,
         )
     )
@@ -94,7 +104,7 @@ async def get_usage(
     agent_result = await db.execute(
         select(Cost.agent, func.sum(Cost.usd))
         .join(Session, Cost.session_id == Session.id)
-        .where(Session.user_id == current_user.user_id)
+        .where(Session.user_id == user_uuid)
         .group_by(Cost.agent)
     )
     by_agent = {row[0]: float(row[1]) for row in agent_result}
@@ -104,7 +114,7 @@ async def get_usage(
         select(Cost.model, func.sum(Cost.usd))
         .join(Session, Cost.session_id == Session.id)
         .where(
-            Session.user_id == current_user.user_id,
+            Session.user_id == user_uuid,
             Cost.model.isnot(None),
         )
         .group_by(Cost.model)
@@ -146,8 +156,18 @@ async def update_budget(
             detail="Budget cannot exceed $10,000",
         )
 
+    # Convert user_id string to UUID
+    from uuid import UUID
+    try:
+        user_uuid = UUID(current_user.user_id)
+    except (ValueError, TypeError):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid user ID format",
+        )
+
     # Get user record
-    user_result = await db.execute(select(User).where(User.id == current_user.user_id))
+    user_result = await db.execute(select(User).where(User.id == user_uuid))
     user = user_result.scalar_one_or_none()
 
     if not user:
