@@ -18,3 +18,6 @@ query-filters:
   - exclude:
       id: js/unused-local-variable
       # False positive on multi-line type definitions in TypeScript
+      
+# Note: All source code alerts have been addressed as of 2025-08-21
+# Remaining alerts are from Docker base image vulnerabilities
