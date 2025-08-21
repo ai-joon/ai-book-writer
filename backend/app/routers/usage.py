@@ -62,6 +62,7 @@ async def get_usage(
 
     # Convert user_id string to UUID
     from uuid import UUID
+
     try:
         user_uuid = UUID(current_user.user_id)
     except (ValueError, TypeError):
@@ -158,6 +159,7 @@ async def update_budget(
 
     # Convert user_id string to UUID
     from uuid import UUID
+
     try:
         user_uuid = UUID(current_user.user_id)
     except (ValueError, TypeError):
