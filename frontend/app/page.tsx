@@ -463,8 +463,10 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Input Panel */}
           <div className="lg:col-span-1">
-            <div className="bg-snow rounded-xl shadow-[0_6px_20px_rgba(27,37,89,0.08)] p-6 space-y-4">
+            <div className="bg-snow rounded-xl shadow-[0_6px_20px_rgba(27,37,89,0.08)] p-6 space-y-4 h-full lg:min-h-[600px] flex flex-col">
               <h2 className="font-serif text-xl mb-4">Book Configuration</h2>
+              
+              <div className="flex-1 space-y-4">
               
               <div>
                 <label className="block text-sm font-medium mb-2 text-slate">
@@ -538,7 +540,9 @@ export default function Home() {
                   disabled={isGenerating}
                 />
               </div>
+              </div>
 
+              <div className="space-y-4">
               <button
                 onClick={startOutlineGeneration}
                 disabled={!brief.trim() || isGenerating}
@@ -565,12 +569,13 @@ export default function Home() {
                   />
                 </div>
               )}
+              </div>
             </div>
           </div>
 
           {/* Output Panel */}
           <div className="lg:col-span-2">
-            <div className="bg-snow rounded-xl shadow-[0_6px_20px_rgba(27,37,89,0.08)] p-6 h-[600px] flex flex-col">
+            <div className="bg-snow rounded-xl shadow-[0_6px_20px_rgba(27,37,89,0.08)] p-6 h-full lg:min-h-[600px] flex flex-col">
               <h2 className="font-serif text-xl mb-4">Generated Content</h2>
               
               <div className="flex-1 overflow-y-auto space-y-4 px-2">
