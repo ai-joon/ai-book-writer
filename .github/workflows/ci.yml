@@ -437,14 +437,42 @@ jobs:
     
     - name: Run smoke tests
       run: |
-        # Wait for services to be ready
-        sleep 30
+        # Wait for services to be ready with retries
+        echo "Waiting for services to be ready..."
+        MAX_RETRIES=10
+        RETRY_INTERVAL=30
         
-        # Test API health
-        curl -f https://api.sopher.ai/healthz || exit 1
+        # Test API health with retries
+        echo "Testing API health at https://api.sopher.ai/healthz"
+        for i in $(seq 1 $MAX_RETRIES); do
+          if curl -f https://api.sopher.ai/healthz; then
+            echo "✓ API is healthy"
+            break
+          else
+            echo "Attempt $i/$MAX_RETRIES failed, waiting ${RETRY_INTERVAL}s..."
+            if [ $i -eq $MAX_RETRIES ]; then
+              echo "API health check failed after $MAX_RETRIES attempts"
+              exit 1
+            fi
+            sleep $RETRY_INTERVAL
+          fi
+        done
         
-        # Test web health
-        curl -f https://sopher.ai || exit 1
+        # Test web health with retries
+        echo "Testing web health at https://sopher.ai"
+        for i in $(seq 1 $MAX_RETRIES); do
+          if curl -f https://sopher.ai; then
+            echo "✓ Web is healthy"
+            break
+          else
+            echo "Attempt $i/$MAX_RETRIES failed, waiting ${RETRY_INTERVAL}s..."
+            if [ $i -eq $MAX_RETRIES ]; then
+              echo "Web health check failed after $MAX_RETRIES attempts"
+              exit 1
+            fi
+            sleep $RETRY_INTERVAL
+          fi
+        done
 
   # Security Scanning
   security-scan:
