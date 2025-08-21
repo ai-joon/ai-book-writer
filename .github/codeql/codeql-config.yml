@@ -1,0 +1,20 @@
+# CodeQL configuration
+name: "CodeQL Config"
+
+# Paths to ignore during the analysis
+paths-ignore:
+  - node_modules
+  - venv
+  - .venv
+  - "**/*.min.js"
+  - "**/vendor/**"
+  
+# Query filters to suppress specific false positives
+query-filters:
+  - exclude:
+      id: py/clear-text-cookie-storage
+      # Access token cookie intentionally has httponly=False for Next.js middleware
+      # Mitigated by: token expiry, refresh tokens with httponly=True, samesite=lax
+  - exclude:
+      id: js/unused-local-variable
+      # False positive on multi-line type definitions in TypeScript
