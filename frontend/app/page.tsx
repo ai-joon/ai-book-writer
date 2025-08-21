@@ -26,15 +26,13 @@ export default function Home() {
   const [streamedContent, setStreamedContent] = useState('')
   const [authStatus, setAuthStatus] = useState<'checking' | 'success' | 'failed' | null>(null)
   const [authMessage, setAuthMessage] = useState<string | null>(null)
-  // lgtm[js/unused-local-variable] - errorInfo is used in error display logic
-  const [errorInfo, setErrorInfo] = useState<
-    | null
-    | {
-        message: string
-        hint?: string
-        diagnostics?: { error_id?: string; request_id?: string; error_code?: string; timestamp: string }
-      }
-  >(null)
+  
+  type ErrorInfo = {
+    message: string
+    hint?: string
+    diagnostics?: { error_id?: string; request_id?: string; error_code?: string; timestamp: string }
+  }
+  const [errorInfo, setErrorInfo] = useState<ErrorInfo | null>(null)
   
   const messages = useStore((state: AppState) => state.messages)
   const addMessage = useStore((state: AppState) => state.addMessage)

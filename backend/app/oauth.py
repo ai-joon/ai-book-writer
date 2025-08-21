@@ -221,13 +221,13 @@ def set_auth_cookies(
     use_secure = is_production or x_forwarded_proto == "https"
 
     try:
-        # lgtm[py/clear-text-cookie-storage] - httponly=False needed for Next.js
-        # The token has built-in expiry and we use refresh tokens for security
-        response.set_cookie(  # nosec B113 # codeql[py/clear-text-cookie-storage]
+        # Set access token cookie with httponly=True for security
+        # Frontend will use a separate auth check endpoint instead
+        response.set_cookie(
             key="access_token",
             value=access_token,
             max_age=3600,
-            httponly=False,  # Allow Next.js middleware to read for auth checks
+            httponly=True,  # Secure cookie - frontend uses /api/auth/me to check auth
             samesite="lax",  # Always use lax for security
             secure=use_secure,  # Use secure flag when on HTTPS
             path="/",
