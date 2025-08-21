@@ -26,6 +26,7 @@ export default function Home() {
   const [streamedContent, setStreamedContent] = useState('')
   const [authStatus, setAuthStatus] = useState<'checking' | 'success' | 'failed' | null>(null)
   const [authMessage, setAuthMessage] = useState<string | null>(null)
+  // lgtm[js/unused-local-variable] - errorInfo is used in error display logic
   const [errorInfo, setErrorInfo] = useState<
     | null
     | {

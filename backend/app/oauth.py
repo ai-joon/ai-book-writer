@@ -221,9 +221,9 @@ def set_auth_cookies(
     use_secure = is_production or x_forwarded_proto == "https"
 
     try:
-        # CodeQL ignore: Access token needs httponly=False for Next.js middleware
+        # lgtm[py/clear-text-cookie-storage] - httponly=False needed for Next.js
         # The token has built-in expiry and we use refresh tokens for security
-        response.set_cookie(  # nosec B113
+        response.set_cookie(  # nosec B113 # codeql[py/clear-text-cookie-storage]
             key="access_token",
             value=access_token,
             max_age=3600,
