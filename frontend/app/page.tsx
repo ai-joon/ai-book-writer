@@ -251,18 +251,16 @@ export default function Home() {
       // Create project (using demo project ID for now)
       const projectId = '00000000-0000-0000-0000-000000000000'
       
-      // Start SSE connection (cookies will be included automatically)
+      // Start SSE connection via API route that handles cookies properly
       const eventSource = new EventSource(
-        `/api/backend/v1/projects/${projectId}/outline/stream?` +
+        `/api/outline/stream?` +
         new URLSearchParams({
+          project_id: projectId,
           brief: brief.trim(),
           style_guide: styleGuide || '',
           target_chapters: targetChapters.toString(),
           model,
-        }),
-        {
-          withCredentials: true,
-        }
+        })
       )
       
       let fullContent = ''
