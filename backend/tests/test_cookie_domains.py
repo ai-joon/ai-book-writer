@@ -126,7 +126,7 @@ class TestCookieDomainBehavior:
         access_cookie = next(c for c in cookies if "access_token" in c)
         assert "Secure" not in access_cookie  # Not secure in dev
         assert "SameSite=lax" in access_cookie or "SameSite=Lax" in access_cookie
-        assert "HttpOnly" not in access_cookie  # Frontend needs to read it
+        assert "HttpOnly" in access_cookie  # Now using httponly=True for security
         assert "Path=/" in access_cookie
 
         # Check refresh_token cookie
@@ -155,7 +155,7 @@ class TestCookieDomainBehavior:
         assert (
             "SameSite=lax" in access_cookie or "SameSite=Lax" in access_cookie
         )  # Using lax for security
-        assert "HttpOnly" not in access_cookie
+        assert "HttpOnly" in access_cookie  # Now using httponly=True for security
         assert "Path=/" in access_cookie
         assert "Domain=sopher.ai" in access_cookie
 
@@ -225,7 +225,7 @@ class TestCookieDomainBehavior:
                 path="/",
                 domain="sopher.ai",
                 secure=True,
-                httponly=False,
+                httponly=True,
                 samesite="lax",
             )
             response_clear.set_cookie(
