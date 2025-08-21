@@ -9,8 +9,8 @@ const publicRoutes = [
   '/api/backend/auth/callback',  // OAuth callback route
 ]
 
-// Debug mode - set to true to enable logging
-const DEBUG = process.env.NODE_ENV !== 'production'
+// Debug mode - controlled by environment variable for production debugging
+const DEBUG = process.env.NEXT_PUBLIC_DEBUG_AUTH === 'true' || process.env.NODE_ENV === 'development'
 
 export function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl
@@ -23,7 +23,9 @@ export function middleware(request: NextRequest) {
       headers: {
         host: request.headers.get('host'),
         referer: request.headers.get('referer'),
-      }
+        cookie: request.headers.get('cookie') ? 'present' : 'absent',
+      },
+      timestamp: new Date().toISOString(),
     })
   }
 
@@ -33,12 +35,18 @@ export function middleware(request: NextRequest) {
     request.headers.get('referer')?.includes('/api/backend/auth/callback') ||
     searchParams.get('oauth') === 'success'
   )) {
-    if (DEBUG) console.log('[Middleware] OAuth callback redirect detected, allowing access')
-    // Remove the oauth parameter from URL for cleaner UX
+    if (DEBUG) {
+      console.log('[Middleware] OAuth callback redirect detected', {
+        referer: request.headers.get('referer'),
+        oauthParamPresent: !!searchParams.get('oauth'),
+        cookiesPresent: request.cookies.getAll().map(c => c.name),
+      })
+    }
+    
+    // For OAuth success, always allow through and let client-side handle verification
     if (searchParams.get('oauth') === 'success') {
-      const url = request.nextUrl.clone()
-      url.searchParams.delete('oauth')
-      return NextResponse.redirect(url)
+      // Don't remove the parameter yet - let the client handle it
+      return NextResponse.next()
     }
     return NextResponse.next()
   }
@@ -63,7 +71,14 @@ export function middleware(request: NextRequest) {
 
   // If no token, redirect to login
   if (!accessToken || !accessToken.value) {
-    if (DEBUG) console.log('[Middleware] No valid access token, redirecting to login')
+    if (DEBUG) {
+      console.log('[Middleware] No valid access token, redirecting to login', {
+        accessTokenExists: !!accessToken,
+        hasValue: !!accessToken?.value,
+        pathname,
+        allCookies: request.cookies.getAll().map(c => c.name),
+      })
+    }
     const loginUrl = new URL('/login', request.url)
     // Preserve the original URL as a redirect parameter
     loginUrl.searchParams.set('redirect', pathname)
@@ -79,7 +94,13 @@ export function middleware(request: NextRequest) {
       const now = Math.floor(Date.now() / 1000)
       
       if (payload.exp && payload.exp < now) {
-        if (DEBUG) console.log('[Middleware] Token expired, redirecting to login')
+        if (DEBUG) {
+          console.log('[Middleware] Token expired, redirecting to login', {
+            exp: payload.exp,
+            now,
+            expired: true,
+          })
+        }
         const loginUrl = new URL('/login', request.url)
         loginUrl.searchParams.set('redirect', pathname)
         return NextResponse.redirect(loginUrl)
@@ -90,7 +111,12 @@ export function middleware(request: NextRequest) {
     // If we can't parse the token, let it through and let the backend validate
   }
 
-  if (DEBUG) console.log('[Middleware] Valid token found, allowing access')
+  if (DEBUG) {
+    console.log('[Middleware] Valid token found, allowing access', {
+      pathname,
+      tokenLength: accessToken.value.length,
+    })
+  }
   
   // Continue with the request
   return NextResponse.next()
