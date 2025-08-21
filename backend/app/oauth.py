@@ -217,6 +217,9 @@ def set_auth_cookies(
     # Set access token cookie (1 hour)
     # Not using HttpOnly so Next.js middleware can read it for auth checks
     # The token itself has expiry and we use refresh tokens for security
+    # Determine if we should use secure cookies (HTTPS or production)
+    use_secure = is_production or x_forwarded_proto == "https"
+
     try:
         response.set_cookie(
             key="access_token",
@@ -224,12 +227,12 @@ def set_auth_cookies(
             max_age=3600,
             httponly=False,  # Allow Next.js middleware to read for auth checks
             samesite="lax",  # Always use lax for security
-            secure=is_production,  # Required when samesite=none
+            secure=use_secure,  # Use secure flag when on HTTPS
             path="/",
             domain=domain,  # None for localhost, "sopher.ai" for production
         )
         logger.info(
-            f"Access token cookie set successfully - domain: {domain}, " f"secure: {is_production}"
+            f"Access token cookie set successfully - domain: {domain}, " f"secure: {use_secure}"
         )
     except Exception as e:
         logger.error(f"Failed to set access token cookie: {e}")
@@ -242,12 +245,12 @@ def set_auth_cookies(
             max_age=7 * 24 * 3600,
             httponly=True,  # Keep refresh token httponly for security
             samesite="lax",  # Always use lax for security
-            secure=is_production,  # Required when samesite=none
+            secure=use_secure,  # Use secure flag when on HTTPS
             path="/",
             domain=domain,  # None for localhost, "sopher.ai" for production
         )
         logger.info(
-            f"Refresh token cookie set successfully - domain: {domain}, " f"secure: {is_production}"
+            f"Refresh token cookie set successfully - domain: {domain}, " f"secure: {use_secure}"
         )
     except Exception as e:
         logger.error(f"Failed to set refresh token cookie: {e}")
