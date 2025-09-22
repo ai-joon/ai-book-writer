@@ -1,4 +1,4 @@
-# Sopher.ai - AI Book Writer System
+# AI Book Writer System
 
 [![CI/CD Pipeline](https://github.com/cheesejaguar/sopher.ai/actions/workflows/ci.yml/badge.svg)](https://github.com/cheesejaguar/sopher.ai/actions/workflows/ci.yml)
 
