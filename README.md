@@ -4,6 +4,7 @@
 
 **Transform your ideas into complete manuscripts in hours, not months.**
 
+This is a production-ready AI book-writing system that transforms author briefs into complete manuscripts with real-time streaming, multi-agent collaboration, and comprehensive cost controls. Built for authors, publishers, and content creators who need high-quality, consistent book generation at scale.
 book.ai is a production-ready AI book-writing system that transforms author briefs into complete manuscripts with real-time streaming, multi-agent collaboration, and comprehensive cost controls. Built for authors, publishers, and content creators who need high-quality, consistent book generation at scale.
 
 ## Features ✨
