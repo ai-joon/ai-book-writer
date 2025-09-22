@@ -1,10 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: sopher-web
-  namespace: sopher-ai
+  name: book-web
+  namespace: book-ai
   labels:
-    app: sopher-web
+    app: book-web
     tier: frontend
 spec:
   replicas: 2
@@ -15,11 +15,11 @@ spec:
       maxUnavailable: 0
   selector:
     matchLabels:
-      app: sopher-web
+      app: book-web
   template:
     metadata:
       labels:
-        app: sopher-web
+        app: book-web
         tier: frontend
     spec:
       securityContext:
@@ -36,16 +36,16 @@ spec:
           capabilities:
             drop:
               - ALL
-        image: ghcr.io/cheesejaguar/sopher-frontend:latest
+        image: ghcr.io/cheesejaguar/book-frontend:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 3000
           name: http
         env:
         - name: BACKEND_URL
-          value: "http://sopher-api-service:8000"
+          value: "http://book-api-service:8000"
         - name: NEXT_PUBLIC_BACKEND_URL
-          value: "https://api.sopher.ai"
+          value: "https://api.book.ai"
         volumeMounts:
         - name: tmp-volume
           mountPath: /tmp

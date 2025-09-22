@@ -30,7 +30,7 @@ class TestCookieHandling:
         """Test cookie setting in production environment."""
         response = Response()
         request = Mock(spec=Request)
-        request.headers = {"host": "sopher.ai", "x-forwarded-host": "sopher.ai"}
+        request.headers = {"host": "book.ai", "x-forwarded-host": "book.ai"}
 
         with patch.dict("os.environ", {"ENVIRONMENT": "production"}):
             set_auth_cookies(response, "access_token_123", "refresh_token_456", request)
@@ -42,7 +42,7 @@ class TestCookieHandling:
         """Test that clear_auth_cookies uses same attributes as set_auth_cookies."""
         response = Response()
         request = Mock(spec=Request)
-        request.headers = {"host": "sopher.ai"}
+        request.headers = {"host": "book.ai"}
 
         with patch.dict("os.environ", {"ENVIRONMENT": "production"}):
             clear_auth_cookies(response, request)
@@ -55,8 +55,8 @@ class TestCookieHandling:
         test_cases = [
             ("localhost:3000", None),  # localhost should have no domain
             ("127.0.0.1:3000", None),  # IP should have no domain
-            ("sopher.ai", ".sopher.ai"),  # Production should use .sopher.ai
-            ("api.sopher.ai", ".sopher.ai"),  # API subdomain should use .sopher.ai
+            ("book.ai", ".book.ai"),  # Production should use .book.ai
+            ("api.book.ai", ".book.ai"),  # API subdomain should use .book.ai
         ]
 
         for host, expected_domain in test_cases:
@@ -67,7 +67,7 @@ class TestCookieHandling:
             # We'll need to inspect the actual cookie setting
             # This is a simplified test - in real implementation we'd mock set_cookie
             with patch.dict(
-                "os.environ", {"ENVIRONMENT": "production" if "sopher" in host else "development"}
+                "os.environ", {"ENVIRONMENT": "production" if "book" in host else "development"}
             ):
                 set_auth_cookies(response, "token", "refresh", request)
 
@@ -166,9 +166,9 @@ class TestCookieIntegration:
 
     def test_cookies_set_on_redirect_response(self):
         """Test that cookies are actually set on the redirect response object."""
-        redirect = RedirectResponse(url="https://sopher.ai/", status_code=302)
+        redirect = RedirectResponse(url="https://book.ai/", status_code=302)
         request = Mock(spec=Request)
-        request.headers = {"host": "sopher.ai"}
+        request.headers = {"host": "book.ai"}
 
         # Set cookies on the redirect response
         with patch.dict("os.environ", {"ENVIRONMENT": "production"}):

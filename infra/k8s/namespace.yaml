@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: sopher-ai
+  name: book-ai
   labels:
-    app: sopher-ai
+    app: book-ai
     environment: production

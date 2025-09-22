@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
 
   // Forward the request to the backend with cookies
   const backendUrl = process.env.NODE_ENV === 'production'
-    ? 'http://sopher-api-service:8000'
+    ? 'http://book-api-service:8000'
     : 'http://localhost:8000'
 
   const params = new URLSearchParams({

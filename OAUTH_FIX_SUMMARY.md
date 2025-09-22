@@ -28,7 +28,7 @@ In production, users were experiencing a redirect loop after successful OAuth au
 
 #### Cookie Setting (`backend/app/oauth.py`)
 - Enhanced production detection using `x-forwarded-proto` header
-- Fixed domain setting: use `sopher.ai` instead of `.sopher.ai` for better compatibility
+- Fixed domain setting: use `book.ai` instead of `.book.ai` for better compatibility
 - Changed SameSite from `none` to `lax` for better compatibility
 - Added try-catch blocks for cookie operations
 - Better handling of proxy headers (`x-forwarded-host`)
@@ -103,5 +103,5 @@ If the issue persists:
 1. Enable debug logging with `DEBUG_AUTH=true` and `NEXT_PUBLIC_DEBUG_AUTH=true`
 2. Check browser developer tools for cookie presence
 3. Verify `/api/backend/auth/verify` endpoint returns `authenticated: true`
-4. Check that cookies have correct domain (should be `sopher.ai` in production)
+4. Check that cookies have correct domain (should be `book.ai` in production)
 5. Ensure HTTPS is properly configured (required for secure cookies)

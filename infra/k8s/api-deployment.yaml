@@ -1,10 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: sopher-api
-  namespace: sopher-ai
+  name: book-api
+  namespace: book-ai
   labels:
-    app: sopher-api
+    app: book-api
     tier: backend
 spec:
   replicas: 2
@@ -15,11 +15,11 @@ spec:
       maxUnavailable: 0
   selector:
     matchLabels:
-      app: sopher-api
+      app: book-api
   template:
     metadata:
       labels:
-        app: sopher-api
+        app: book-api
         tier: backend
     spec:
       securityContext:
@@ -36,7 +36,7 @@ spec:
           capabilities:
             drop:
               - ALL
-        image: ghcr.io/cheesejaguar/sopher-backend:latest
+        image: ghcr.io/cheesejaguar/book-backend:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8000
@@ -50,9 +50,9 @@ spec:
           value: "/home/appuser/.config"
         envFrom:
         - configMapRef:
-            name: sopher-ai-config
+            name: book-ai-config
         - secretRef:
-            name: sopher-ai-secrets
+            name: book-ai-secrets
         volumeMounts:
         - name: tmp-volume
           mountPath: /tmp

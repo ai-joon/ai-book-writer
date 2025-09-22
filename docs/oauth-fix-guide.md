@@ -27,7 +27,7 @@ cp .env.example .env
 6. For Application type, select **Web application**
 7. Add authorized redirect URIs:
    - For local development: `http://localhost:3000/api/backend/auth/callback/google`
-   - For production: `https://api.sopher.ai/auth/callback/google`
+   - For production: `https://api.book.ai/auth/callback/google`
 8. Click **CREATE**
 9. Copy the **Client ID** and **Client Secret**
 
@@ -44,7 +44,7 @@ GOOGLE_OAUTH_REDIRECT_URI=http://localhost:3000/api/backend/auth/callback/google
 
 For production deployment, use:
 ```env
-GOOGLE_OAUTH_REDIRECT_URI=https://api.sopher.ai/auth/callback/google
+GOOGLE_OAUTH_REDIRECT_URI=https://api.book.ai/auth/callback/google
 ```
 
 ### Step 4: Restart the Backend Server

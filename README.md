@@ -1,10 +1,11 @@
-# AI Book Writer System
+# book.ai - AI Book Writer System
 
-[![CI/CD Pipeline]([https://github.com/ai-joon/ai-book-writer/actions/workflows/ci.yml/badge.svg)](https://github.com/cheesejaguar/sopher.ai/actions/workflows/ci.yml)
+[![CI/CD Pipeline](https://github.com/cheesejaguar/book.ai/actions/workflows/ci.yml/badge.svg)](https://github.com/cheesejaguar/book.ai/actions/workflows/ci.yml)
 
 **Transform your ideas into complete manuscripts in hours, not months.**
 
 This is a production-ready AI book-writing system that transforms author briefs into complete manuscripts with real-time streaming, multi-agent collaboration, and comprehensive cost controls. Built for authors, publishers, and content creators who need high-quality, consistent book generation at scale.
+book.ai is a production-ready AI book-writing system that transforms author briefs into complete manuscripts with real-time streaming, multi-agent collaboration, and comprehensive cost controls. Built for authors, publishers, and content creators who need high-quality, consistent book generation at scale.
 
 ## Features ✨
 
@@ -75,8 +76,8 @@ This is a production-ready AI book-writing system that transforms author briefs 
 
 1. **Clone the repository:**
 ```bash
-git clone https://github.com/cheesejaguar/sopher.ai.git
-cd sopher.ai
+git clone https://github.com/ai-joon/ai-book-writer.git
+cd ai-book-writer
 ```
 
 2. **Set up environment variables:**
@@ -275,12 +276,12 @@ npm run test                     # Vitest
 #### 1. Build and Push Images
 ```bash
 # Build backend image
-docker build -t ghcr.io/your-org/sopher-api:latest backend/
-docker push ghcr.io/your-org/sopher-api:latest
+docker build -t ghcr.io/your-org/book-api:latest backend/
+docker push ghcr.io/your-org/book-api:latest
 
 # Build frontend image  
-docker build -t ghcr.io/your-org/sopher-web:latest frontend/
-docker push ghcr.io/your-org/sopher-web:latest
+docker build -t ghcr.io/your-org/book-web:latest frontend/
+docker push ghcr.io/your-org/book-web:latest
 ```
 
 #### 2. Deploy Infrastructure
@@ -289,30 +290,30 @@ docker push ghcr.io/your-org/sopher-web:latest
 kubectl apply -f infra/k8s/
 
 # Verify deployment
-kubectl get pods -n sopher-ai
-kubectl get services -n sopher-ai
+kubectl get pods -n book-ai
+kubectl get services -n book-ai
 ```
 
 #### 3. Configure Secrets
 ```bash
 # Create namespace
-kubectl create namespace sopher-ai
+kubectl create namespace book-ai
 
 # Add API keys
-kubectl create secret generic sopher-ai-secrets \
+kubectl create secret generic book-ai-secrets \
   --from-literal=ANTHROPIC_API_KEY=your-key \
   --from-literal=OPENAI_API_KEY=your-key \
   --from-literal=GOOGLE_API_KEY=your-key \
   --from-literal=GOOGLE_CLIENT_ID=your-client-id \
   --from-literal=GOOGLE_CLIENT_SECRET=your-client-secret \
   --from-literal=JWT_SECRET=your-jwt-secret \
-  -n sopher-ai
+  -n book-ai
 
 # Add database credentials
-kubectl create secret generic sopher-ai-db \
+kubectl create secret generic book-ai-db \
   --from-literal=DATABASE_URL=postgresql://user:pass@host:5432/db \
   --from-literal=REDIS_URL=redis://host:6379/0 \
-  -n sopher-ai
+  -n book-ai
 ```
 
 #### 4. Production Configuration
@@ -380,7 +381,7 @@ router_settings:
 #### Core Configuration
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `DATABASE_URL` | PostgreSQL connection string | `postgresql+asyncpg://postgres:postgres@localhost:5432/sopherai` |
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql+asyncpg://postgres:postgres@localhost:5432/bookai` |
 | `REDIS_URL` | Redis connection string | `redis://localhost:6379/0` |
 | `JWT_SECRET` | JWT signing secret | `dev-secret-key-change-in-production` |
 | `MONTHLY_BUDGET_USD` | Monthly cost limit | `100` |

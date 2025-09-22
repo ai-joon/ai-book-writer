@@ -74,11 +74,11 @@ class TestCookieDomainBehavior:
         for cookie in cookies:
             assert "Domain=" not in cookie
 
-    def test_production_domain_sopher_ai(self):
-        """Test production domain setting for sopher.ai."""
+    def test_production_domain_book_ai(self):
+        """Test production domain setting for book.ai."""
         response = Response()
         request = self.create_request(
-            "app.sopher.ai:443", headers={"x-forwarded-host": "app.sopher.ai"}
+            "app.book.ai:443", headers={"x-forwarded-host": "app.book.ai"}
         )
 
         with patch.dict("os.environ", {"ENV": "production"}):
@@ -87,17 +87,17 @@ class TestCookieDomainBehavior:
         cookies = response.headers.getlist("set-cookie")
         for cookie in cookies:
             if "access_token" in cookie or "refresh_token" in cookie:
-                assert "Domain=sopher.ai" in cookie
+                assert "Domain=book.ai" in cookie
                 assert "Secure" in cookie
 
     def test_subdomain_compatibility(self):
         """Test that cookies work across subdomains."""
         test_cases = [
-            ("sopher.ai", "sopher.ai"),
-            ("www.sopher.ai", "sopher.ai"),
-            ("app.sopher.ai", "sopher.ai"),
-            ("api.sopher.ai", "sopher.ai"),
-            ("staging.sopher.ai", "sopher.ai"),
+            ("book.ai", "book.ai"),
+            ("www.book.ai", "book.ai"),
+            ("app.book.ai", "book.ai"),
+            ("api.book.ai", "book.ai"),
+            ("staging.book.ai", "book.ai"),
         ]
 
         for host, expected_domain in test_cases:
@@ -140,8 +140,8 @@ class TestCookieDomainBehavior:
         """Test cookie security attributes in production."""
         response = Response()
         request = self.create_request(
-            "app.sopher.ai:443",
-            headers={"x-forwarded-host": "app.sopher.ai", "x-forwarded-proto": "https"},
+            "app.book.ai:443",
+            headers={"x-forwarded-host": "app.book.ai", "x-forwarded-proto": "https"},
         )
 
         with patch.dict("os.environ", {"ENV": "production"}):
@@ -157,7 +157,7 @@ class TestCookieDomainBehavior:
         )  # Using lax for security
         assert "HttpOnly" in access_cookie  # Now using httponly=True for security
         assert "Path=/" in access_cookie
-        assert "Domain=sopher.ai" in access_cookie
+        assert "Domain=book.ai" in access_cookie
 
         # Check refresh_token cookie
         refresh_cookie = next(c for c in cookies if "refresh_token" in c)
@@ -165,15 +165,15 @@ class TestCookieDomainBehavior:
         assert "SameSite=lax" in refresh_cookie or "SameSite=Lax" in refresh_cookie
         assert "HttpOnly" in refresh_cookie
         assert "Path=/" in refresh_cookie
-        assert "Domain=sopher.ai" in refresh_cookie
+        assert "Domain=book.ai" in refresh_cookie
 
     def test_proxy_header_handling(self):
         """Test proper handling of proxy headers."""
         test_cases = [
             # (x-forwarded-host, x-forwarded-proto, expected_domain, expected_secure)
-            ("app.sopher.ai", "https", "sopher.ai", True),
+            ("app.book.ai", "https", "book.ai", True),
             ("localhost:3000", "http", None, False),
-            ("staging.sopher.ai", "https", "sopher.ai", True),
+            ("staging.book.ai", "https", "book.ai", True),
             (None, "https", None, True),  # No forwarded host
         ]
 
@@ -206,7 +206,7 @@ class TestCookieDomainBehavior:
         # First set cookies
         response_set = Response()
         request = self.create_request(
-            "app.sopher.ai:443", headers={"x-forwarded-host": "app.sopher.ai"}
+            "app.book.ai:443", headers={"x-forwarded-host": "app.book.ai"}
         )
 
         with patch.dict("os.environ", {"ENV": "production"}):
@@ -223,7 +223,7 @@ class TestCookieDomainBehavior:
                 value="",
                 max_age=0,
                 path="/",
-                domain="sopher.ai",
+                domain="book.ai",
                 secure=True,
                 httponly=True,
                 samesite="lax",
@@ -233,7 +233,7 @@ class TestCookieDomainBehavior:
                 value="",
                 max_age=0,
                 path="/",
-                domain="sopher.ai",
+                domain="book.ai",
                 secure=True,
                 httponly=True,
                 samesite="lax",
@@ -243,17 +243,17 @@ class TestCookieDomainBehavior:
 
         # Verify domain and path match
         for cookie in clear_cookies:
-            assert "Domain=sopher.ai" in cookie
+            assert "Domain=book.ai" in cookie
             assert "Path=/" in cookie
             assert "Max-Age=0" in cookie
 
     def test_cross_origin_cookie_access(self):
         """Test cookie behavior for cross-origin requests."""
-        # Frontend at app.sopher.ai making request to api.sopher.ai
+        # Frontend at app.book.ai making request to api.book.ai
         response = Response()
         request = self.create_request(
-            "api.sopher.ai:443",
-            headers={"origin": "https://app.sopher.ai", "x-forwarded-host": "api.sopher.ai"},
+            "api.book.ai:443",
+            headers={"origin": "https://app.book.ai", "x-forwarded-host": "api.book.ai"},
         )
 
         with patch.dict("os.environ", {"ENV": "production"}):
@@ -261,9 +261,9 @@ class TestCookieDomainBehavior:
 
         cookies = response.headers.getlist("set-cookie")
 
-        # Cookies should be set with domain=sopher.ai to work across subdomains
+        # Cookies should be set with domain=book.ai to work across subdomains
         for cookie in cookies:
-            assert "Domain=sopher.ai" in cookie
+            assert "Domain=book.ai" in cookie
             assert "SameSite=lax" in cookie or "SameSite=Lax" in cookie  # Using lax for security
             assert "Secure" in cookie  # Required with SameSite=None
 
@@ -319,8 +319,8 @@ class TestCookieDomainBehavior:
         # Internationalized domain names or special cases
         test_cases = [
             "xn--spher-nua.ai",  # IDN encoded
-            "sopher-ai.com",  # Hyphenated
-            "sopher_ai.com",  # Underscore (technically invalid but test handling)
+            "book-ai.com",  # Hyphenated
+            "book_ai.com",  # Underscore (technically invalid but test handling)
         ]
 
         for domain in test_cases:

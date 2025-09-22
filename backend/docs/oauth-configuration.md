@@ -6,19 +6,19 @@ To fix the OAuth login redirect issue, the following environment variable needs 
 
 ### Current (Problematic) Configuration
 ```
-GOOGLE_OAUTH_REDIRECT_URI=https://api.sopher.ai/auth/callback/google
+GOOGLE_OAUTH_REDIRECT_URI=https://api.book.ai/auth/callback/google
 ```
 
 ### New (Fixed) Configuration
 ```
-GOOGLE_OAUTH_REDIRECT_URI=https://sopher.ai/api/backend/auth/callback/google
+GOOGLE_OAUTH_REDIRECT_URI=https://book.ai/api/backend/auth/callback/google
 ```
 
 ## Why This Change Is Needed
 
-1. **Current Issue**: When OAuth callback goes directly to `api.sopher.ai`, cookies are set with domain `.sopher.ai` but there may be issues with cross-subdomain cookie sharing in some browsers.
+1. **Current Issue**: When OAuth callback goes directly to `api.book.ai`, cookies are set with domain `.book.ai` but there may be issues with cross-subdomain cookie sharing in some browsers.
 
-2. **Solution**: By using `sopher.ai/api/backend/auth/callback/google` (which proxies to the backend), cookies are set directly on the `sopher.ai` domain, ensuring they are accessible when the user is redirected to the main application.
+2. **Solution**: By using `book.ai/api/backend/auth/callback/google` (which proxies to the backend), cookies are set directly on the `book.ai` domain, ensuring they are accessible when the user is redirected to the main application.
 
 ## Google OAuth Console Update
 
@@ -28,8 +28,8 @@ This change also requires updating the authorized redirect URI in the Google Clo
 2. Navigate to APIs & Services > Credentials
 3. Edit your OAuth 2.0 Client ID
 4. Update the Authorized redirect URIs:
-   - Remove: `https://api.sopher.ai/auth/callback/google`
-   - Add: `https://sopher.ai/api/backend/auth/callback/google`
+   - Remove: `https://api.book.ai/auth/callback/google`
+   - Add: `https://book.ai/api/backend/auth/callback/google`
 5. Save the changes
 
 ## Kubernetes Secret Update
@@ -37,15 +37,15 @@ This change also requires updating the authorized redirect URI in the Google Clo
 Update the Kubernetes secret with the new redirect URI:
 
 ```bash
-kubectl edit secret sopher-ai-secrets -n sopher-ai
+kubectl edit secret book-ai-secrets -n book-ai
 ```
 
 Then update the `GOOGLE_OAUTH_REDIRECT_URI` value (base64 encoded).
 
 Or use this command:
 ```bash
-kubectl patch secret sopher-ai-secrets -n sopher-ai --type='json' \
-  -p='[{"op": "replace", "path": "/data/GOOGLE_OAUTH_REDIRECT_URI", "value": "'$(echo -n "https://sopher.ai/api/backend/auth/callback/google" | base64)'"}]'
+kubectl patch secret book-ai-secrets -n book-ai --type='json' \
+  -p='[{"op": "replace", "path": "/data/GOOGLE_OAUTH_REDIRECT_URI", "value": "'$(echo -n "https://book.ai/api/backend/auth/callback/google" | base64)'"}]'
 ```
 
 ## Testing

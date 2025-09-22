@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: sopher-ai-config
-  namespace: sopher-ai
+  name: book-ai-config
+  namespace: book-ai
 data:
   PRIMARY_MODEL: "gpt-5"
   LOG_LEVEL: "INFO"
-  CORS_ORIGINS: "https://sopher.ai,http://localhost:3000"
+  CORS_ORIGINS: "https://book.ai,http://localhost:3000"
   REDIS_DB: "0"
   MONTHLY_BUDGET_USD: "500"

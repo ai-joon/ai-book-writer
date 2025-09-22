@@ -188,7 +188,7 @@ def test_google_callback_creates_new_user(mock_db, mock_validate, mock_exchange,
 
     # Should redirect to frontend
     assert response.status_code == status.HTTP_302_FOUND
-    assert response.headers["location"] in ["http://localhost:3000", "https://sopher.ai"]
+    assert response.headers["location"] in ["http://localhost:3000", "https://book.ai"]
 
     # Verify user was added to session
     assert mock_session.add.called

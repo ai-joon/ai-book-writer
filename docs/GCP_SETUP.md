@@ -1,6 +1,6 @@
 # GCP Service Account Setup for GitHub Actions
 
-This guide walks you through creating a Google Cloud Platform (GCP) service account with the necessary permissions to deploy the sopher.ai application to Google Kubernetes Engine (GKE) via GitHub Actions.
+This guide walks you through creating a Google Cloud Platform (GCP) service account with the necessary permissions to deploy the book.ai application to Google Kubernetes Engine (GKE) via GitHub Actions.
 
 ## Prerequisites
 
@@ -40,7 +40,7 @@ If you prefer to run the commands manually or need to customize the setup:
 # Replace with your actual values
 export PROJECT_ID="your-gcp-project-id"
 export SERVICE_ACCOUNT_NAME="github-actions-deployer"
-export CLUSTER_NAME="sopher-ai-prod"
+export CLUSTER_NAME="book-ai-prod"
 export CLUSTER_ZONE="us-west1-a"
 ```
 
@@ -107,7 +107,7 @@ gcloud container clusters get-credentials ${CLUSTER_NAME} \
     --project=${PROJECT_ID}
 
 # Verify kubectl access
-kubectl auth can-i create deployments --namespace=sopher-ai
+kubectl auth can-i create deployments --namespace=book-ai
 ```
 
 ## Configure GitHub Secrets

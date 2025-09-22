@@ -1,6 +1,6 @@
 # Database Migrations
 
-This directory contains Alembic database migrations for sopher.ai.
+This directory contains Alembic database migrations for book.ai.
 
 ## Setup
 
@@ -11,7 +11,7 @@ pip install alembic
 
 2. Configure database URL:
 ```bash
-export DATABASE_URL="postgresql+asyncpg://user:pass@localhost:5432/sopherai"
+export DATABASE_URL="postgresql+asyncpg://user:pass@localhost:5432/bookai"
 ```
 
 ## Running Migrations
@@ -69,7 +69,7 @@ docker-compose exec api alembic upgrade head
 
 ### Kubernetes deployment:
 ```bash
-kubectl exec -it deployment/sopher-api -- alembic upgrade head
+kubectl exec -it deployment/book-api -- alembic upgrade head
 ```
 
 ## Troubleshooting
@@ -90,5 +90,5 @@ postgresql://          # Wrong for async
 ### Permission errors
 Ensure the database user has CREATE/ALTER permissions:
 ```sql
-GRANT ALL PRIVILEGES ON DATABASE sopherai TO myuser;
+GRANT ALL PRIVILEGES ON DATABASE bookai TO myuser;
 ```

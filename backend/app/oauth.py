@@ -180,8 +180,8 @@ def set_auth_cookies(
     is_production = (
         env == "production"
         or x_forwarded_proto == "https"  # Behind HTTPS proxy
-        or "sopher.ai" in host
-        or "sopher.ai" in x_forwarded_host
+        or "book.ai" in host
+        or "book.ai" in x_forwarded_host
     )
 
     # Override for local testing
@@ -203,10 +203,10 @@ def set_auth_cookies(
         # For localhost, don't set domain (allows cookie on any port)
         if "localhost" in domain or "127.0.0.1" in domain:
             domain = None
-        # For production, always use .sopher.ai for both api.sopher.ai and sopher.ai
-        elif "sopher.ai" in domain:
+        # For production, always use .book.ai for both api.book.ai and book.ai
+        elif "book.ai" in domain:
             # Use the root domain for maximum compatibility
-            domain = "sopher.ai"  # Without leading dot for better compatibility
+            domain = "book.ai"  # Without leading dot for better compatibility
 
     logger.info(
         f"Setting auth cookies - host: {host}, x_forwarded_host: {x_forwarded_host}, "
@@ -231,7 +231,7 @@ def set_auth_cookies(
             samesite="lax",  # Always use lax for security
             secure=use_secure,  # Use secure flag when on HTTPS
             path="/",
-            domain=domain,  # None for localhost, "sopher.ai" for production
+            domain=domain,  # None for localhost, "book.ai" for production
         )
         logger.info(
             f"Access token cookie set successfully - domain: {domain}, " f"secure: {use_secure}"
@@ -249,7 +249,7 @@ def set_auth_cookies(
             samesite="lax",  # Always use lax for security
             secure=use_secure,  # Use secure flag when on HTTPS
             path="/",
-            domain=domain,  # None for localhost, "sopher.ai" for production
+            domain=domain,  # None for localhost, "book.ai" for production
         )
         logger.info(
             f"Refresh token cookie set successfully - domain: {domain}, " f"secure: {use_secure}"
@@ -274,8 +274,8 @@ def clear_auth_cookies(response: Response, request: Request) -> None:
     is_production = (
         env == "production"
         or x_forwarded_proto == "https"
-        or "sopher.ai" in host
-        or "sopher.ai" in x_forwarded_host
+        or "book.ai" in host
+        or "book.ai" in x_forwarded_host
     )
 
     if "localhost" in host or "127.0.0.1" in host:
@@ -291,8 +291,8 @@ def clear_auth_cookies(response: Response, request: Request) -> None:
 
         if "localhost" in domain or "127.0.0.1" in domain:
             domain = None
-        elif "sopher.ai" in domain:
-            domain = "sopher.ai"
+        elif "book.ai" in domain:
+            domain = "book.ai"
 
     logger.info(f"Clearing auth cookies - host: {host}, domain: {domain}")
 

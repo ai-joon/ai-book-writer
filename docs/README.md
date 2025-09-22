@@ -1,6 +1,6 @@
 # Documentation
 
-This directory contains detailed documentation for the sopher.ai project.
+This directory contains detailed documentation for the book.ai project.
 
 ## Available Guides
 

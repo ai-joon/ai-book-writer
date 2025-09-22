@@ -1,1 +1,1 @@
-"""API routers for sopher.ai backend"""
+"""API routers for book.ai backend"""

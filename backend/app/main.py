@@ -1,4 +1,4 @@
-"""Main FastAPI application for sopher.ai"""
+"""Main FastAPI application for book.ai"""
 
 import json
 import os
@@ -42,7 +42,7 @@ litellm.failure_callback = ["prometheus"]
 async def lifespan(app: FastAPI):
     """Manage application lifecycle"""
     # Startup
-    logger.info("Starting sopher.ai backend...")
+    logger.info("Starting book.ai backend...")
 
     # Check OAuth configuration
     google_client_id = os.getenv("GOOGLE_CLIENT_ID", "")
@@ -61,7 +61,7 @@ async def lifespan(app: FastAPI):
     yield
 
     # Shutdown
-    logger.info("Shutting down sopher.ai backend...")
+    logger.info("Shutting down book.ai backend...")
     await cache.disconnect()
     await close_db()
     logger.info("Cleanup complete")
@@ -69,7 +69,7 @@ async def lifespan(app: FastAPI):
 
 # Create FastAPI app
 app = FastAPI(
-    title="sopher.ai",
+    title="book.ai",
     description="AI-powered book writing system",
     version="0.1.0",
     lifespan=lifespan,
@@ -79,7 +79,7 @@ app = FastAPI(
 
 # Add CORS middleware
 # When credentials are included, we must specify exact origins (not wildcards)
-default_origins = "https://sopher.ai,https://api.sopher.ai,http://localhost:3000"
+default_origins = "https://book.ai,https://api.book.ai,http://localhost:3000"
 cors_origins = os.getenv("CORS_ORIGINS", default_origins).split(",")
 # Remove any whitespace from origins
 cors_origins = [origin.strip() for origin in cors_origins]
@@ -290,7 +290,7 @@ async def log_requests(request: Request, call_next: Callable) -> Response:
 @app.get("/healthz", tags=["health"])
 async def health_check():
     """Basic health check"""
-    return {"status": "healthy", "service": "sopher.ai"}
+    return {"status": "healthy", "service": "book.ai"}
 
 
 @app.get("/readyz", tags=["health"])
@@ -339,7 +339,7 @@ app.include_router(usage.router, prefix="/api/v1", tags=["usage"])
 async def root():
     """Root endpoint with API information"""
     return {
-        "name": "sopher.ai",
+        "name": "book.ai",
         "version": "0.1.0",
         "description": "AI-powered book writing system",
         "docs": "/docs",

@@ -24,7 +24,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: sopherai
+      POSTGRES_DB: bookai
     ports:
       - "5432:5432"
     volumes:
@@ -46,7 +46,7 @@ services:
       context: ../backend
       dockerfile: Dockerfile
     environment:
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/sopherai
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/bookai
       REDIS_URL: redis://redis:6379/0
       JWT_SECRET: dev-secret-key-change-in-production
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}

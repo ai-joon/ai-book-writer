@@ -1,15 +1,15 @@
 groups:
-  - name: sopher-ai-application
+  - name: book-ai-application
     rules:
       # High-level application health alerts
       - alert: ApplicationDown
-        expr: up{job="sopher-backend"} == 0
+        expr: up{job="book-backend"} == 0
         for: 1m
         labels:
           severity: critical
           component: backend
         annotations:
-          summary: "Sopher.AI backend is down"
+          summary: "book.ai backend is down"
           description: "Backend service has been down for more than 1 minute"
 
       - alert: FrontendDown
@@ -19,12 +19,12 @@ groups:
           severity: critical
           component: frontend
         annotations:
-          summary: "Sopher.AI frontend is unreachable"
+          summary: "book.ai frontend is unreachable"
           description: "Frontend service has been unreachable for more than 2 minutes"
 
       # Response time and performance alerts
       - alert: HighResponseTime
-        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="sopher-backend"}[5m])) > 2
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="book-backend"}[5m])) > 2
         for: 5m
         labels:
           severity: warning
@@ -34,7 +34,7 @@ groups:
           description: "95th percentile response time is above 2 seconds for the last 5 minutes"
 
       - alert: HighErrorRate
-        expr: rate(http_requests_total{job="sopher-backend",status=~"5.."}[5m]) / rate(http_requests_total{job="sopher-backend"}[5m]) > 0.1
+        expr: rate(http_requests_total{job="book-backend",status=~"5.."}[5m]) / rate(http_requests_total{job="book-backend"}[5m]) > 0.1
         for: 3m
         labels:
           severity: warning
@@ -43,7 +43,7 @@ groups:
           summary: "High error rate detected"
           description: "Error rate is above 10% for the last 3 minutes"
 
-  - name: sopher-ai-infrastructure
+  - name: book-ai-infrastructure
     rules:
       # Database alerts
       - alert: PostgreSQLDown
@@ -108,11 +108,11 @@ groups:
           summary: "Container memory usage is high"
           description: "Container {{ $labels.name }} memory usage is above 90% for 5 minutes"
 
-  - name: sopher-ai-business
+  - name: book-ai-business
     rules:
       # Cost and budget alerts
       - alert: MonthlyBudgetExceeded
-        expr: sopher_ai_monthly_cost_usd > 500
+        expr: book_ai_monthly_cost_usd > 500
         for: 1m
         labels:
           severity: critical
@@ -122,7 +122,7 @@ groups:
           description: "Monthly cost has exceeded $500 budget: ${{ $value }}"
 
       - alert: HighTokenUsageRate
-        expr: rate(sopher_ai_tokens_used_total[1h]) > 1000000
+        expr: rate(book_ai_tokens_used_total[1h]) > 1000000
         for: 15m
         labels:
           severity: warning
@@ -133,7 +133,7 @@ groups:
 
       # Agent performance alerts
       - alert: AgentHighLatency
-        expr: histogram_quantile(0.95, rate(sopher_ai_agent_duration_seconds_bucket[5m])) > 30
+        expr: histogram_quantile(0.95, rate(book_ai_agent_duration_seconds_bucket[5m])) > 30
         for: 5m
         labels:
           severity: warning
@@ -143,7 +143,7 @@ groups:
           description: "Agent {{ $labels.agent_name }} 95th percentile latency is above 30 seconds"
 
       - alert: AgentHighFailureRate
-        expr: rate(sopher_ai_agent_failures_total[5m]) / rate(sopher_ai_agent_requests_total[5m]) > 0.1
+        expr: rate(book_ai_agent_failures_total[5m]) / rate(book_ai_agent_requests_total[5m]) > 0.1
         for: 3m
         labels:
           severity: warning
@@ -154,7 +154,7 @@ groups:
 
       # Streaming performance alerts
       - alert: SSEConnectionsHigh
-        expr: sopher_ai_sse_active_connections > 100
+        expr: book_ai_sse_active_connections > 100
         for: 10m
         labels:
           severity: warning
@@ -164,7 +164,7 @@ groups:
           description: "Active SSE connections: {{ $value }}. This may impact performance."
 
       - alert: SSELatencyHigh
-        expr: histogram_quantile(0.95, rate(sopher_ai_sse_latency_seconds_bucket[5m])) > 0.3
+        expr: histogram_quantile(0.95, rate(book_ai_sse_latency_seconds_bucket[5m])) > 0.3
         for: 5m
         labels:
           severity: warning
@@ -173,11 +173,11 @@ groups:
           summary: "High SSE streaming latency"
           description: "95th percentile SSE latency is above 300ms: {{ $value }}s"
 
-  - name: sopher-ai-security
+  - name: book-ai-security
     rules:
       # Security and authentication alerts
       - alert: HighFailedAuthRate
-        expr: rate(sopher_ai_auth_failures_total[5m]) > 10
+        expr: rate(book_ai_auth_failures_total[5m]) > 10
         for: 2m
         labels:
           severity: warning
@@ -187,7 +187,7 @@ groups:
           description: "Authentication failures: {{ $value }} per second for 2 minutes"
 
       - alert: RateLimitHit
-        expr: rate(sopher_ai_rate_limit_exceeded_total[1m]) > 5
+        expr: rate(book_ai_rate_limit_exceeded_total[1m]) > 5
         for: 1m
         labels:
           severity: warning

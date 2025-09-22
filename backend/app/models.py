@@ -1,4 +1,4 @@
-"""Database models for sopher.ai"""
+"""Database models for book.ai"""
 
 from uuid import uuid4
 
