@@ -66,7 +66,7 @@ def upgrade() -> None:
                 INSERT INTO users (id, email, name, provider, provider_sub, role)
                 VALUES (
                     '00000000-0000-0000-0000-000000000000'::uuid,
-                    'legacy@sopher.ai',
+                    'legacy@book.ai',
                     'Legacy User',
                     'system',
                     'legacy',

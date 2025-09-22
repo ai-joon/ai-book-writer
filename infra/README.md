@@ -1,6 +1,6 @@
-# Sopher.AI Infrastructure Deployment
+# book.ai Infrastructure Deployment
 
-This directory contains Docker Compose configurations and supporting files for deploying Sopher.AI to various environments, optimized for Google Kubernetes Engine (GKE).
+This directory contains Docker Compose configurations and supporting files for deploying book.ai to various environments, optimized for Google Kubernetes Engine (GKE).
 
 ## Quick Start
 
@@ -122,7 +122,7 @@ GRAFANA_ADMIN_PASSWORD=secure_admin_password
 
 # Application
 MONTHLY_BUDGET_USD=500
-CORS_ORIGINS=https://sopher.ai,https://www.sopher.ai
+CORS_ORIGINS=https://book.ai,https://www.book.ai
 ```
 
 ## Deployment Commands

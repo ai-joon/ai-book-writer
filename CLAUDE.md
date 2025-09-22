@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-sopher.ai is a production-ready AI book-writing system that transforms author briefs into complete manuscripts. The system uses real-time streaming, multi-agent collaboration via CrewAI, and comprehensive cost controls. Built as a microservices architecture with FastAPI backend, Next.js frontend, and deployed on Kubernetes.
+book.ai is a production-ready AI book-writing system that transforms author briefs into complete manuscripts. The system uses real-time streaming, multi-agent collaboration via CrewAI, and comprehensive cost controls. Built as a microservices architecture with FastAPI backend, Next.js frontend, and deployed on Kubernetes.
 
 ## Architecture Overview
 

@@ -1,6 +1,6 @@
 # GCP Service Account Setup for GitHub Actions
 
-This guide walks you through creating a Google Cloud Platform (GCP) service account with the necessary permissions to deploy the sopher.ai application to Google Kubernetes Engine (GKE) via GitHub Actions.
+This guide walks you through creating a Google Cloud Platform (GCP) service account with the necessary permissions to deploy the book.ai application to Google Kubernetes Engine (GKE) via GitHub Actions.
 
 ## Prerequisites
 

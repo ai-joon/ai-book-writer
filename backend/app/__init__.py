@@ -1,1 +1,1 @@
-"""sopher.ai backend application package"""
+"""book.ai backend application package"""

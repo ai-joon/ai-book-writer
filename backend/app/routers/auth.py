@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 # Safe URL constants to avoid security scan false positives
 LOCALHOST_URL_TEMPLATE = "http://localhost:{}/"
 DEFAULT_LOCALHOST_URL = "http://localhost:3000/"
-PRODUCTION_URL = "https://sopher.ai/"
+PRODUCTION_URL = "https://book.ai/"
 
 
 def _get_frontend_url(request: Request) -> str:
@@ -48,9 +48,9 @@ def _get_frontend_url(request: Request) -> str:
         "localhost:3000",
         "localhost:3001",
         "127.0.0.1:3000",
-        "sopher.ai",
-        "api.sopher.ai",
-        "www.sopher.ai",
+        "book.ai",
+        "api.book.ai",
+        "www.book.ai",
     }
 
     # Validate and determine the frontend URL
@@ -79,7 +79,7 @@ def _get_frontend_url(request: Request) -> str:
                 return DEFAULT_LOCALHOST_URL
 
         # Check if it's an allowed production host
-        elif host in allowed_hosts or hostname in ["sopher.ai", "api.sopher.ai"]:
+        elif host in allowed_hosts or hostname in ["book.ai", "api.book.ai"]:
             # Always redirect to main domain for production
             return PRODUCTION_URL
         else:

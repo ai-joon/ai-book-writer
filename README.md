@@ -1,10 +1,10 @@
-# Sopher.ai - AI Book Writer System
+# book.ai - AI Book Writer System
 
-[![CI/CD Pipeline](https://github.com/cheesejaguar/sopher.ai/actions/workflows/ci.yml/badge.svg)](https://github.com/cheesejaguar/sopher.ai/actions/workflows/ci.yml)
+[![CI/CD Pipeline](https://github.com/cheesejaguar/book.ai/actions/workflows/ci.yml/badge.svg)](https://github.com/cheesejaguar/book.ai/actions/workflows/ci.yml)
 
 **Transform your ideas into complete manuscripts in hours, not months.**
 
-Sopher.ai is a production-ready AI book-writing system that transforms author briefs into complete manuscripts with real-time streaming, multi-agent collaboration, and comprehensive cost controls. Built for authors, publishers, and content creators who need high-quality, consistent book generation at scale.
+book.ai is a production-ready AI book-writing system that transforms author briefs into complete manuscripts with real-time streaming, multi-agent collaboration, and comprehensive cost controls. Built for authors, publishers, and content creators who need high-quality, consistent book generation at scale.
 
 ## Features ✨
 
@@ -75,8 +75,8 @@ Sopher.ai is a production-ready AI book-writing system that transforms author br
 
 1. **Clone the repository:**
 ```bash
-git clone https://github.com/cheesejaguar/sopher.ai.git
-cd sopher.ai
+git clone https://github.com/ai-joon/ai-book-writer.git
+cd ai-book-writer
 ```
 
 2. **Set up environment variables:**

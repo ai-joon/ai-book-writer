@@ -9,7 +9,7 @@ groups:
           severity: critical
           component: backend
         annotations:
-          summary: "Sopher.AI backend is down"
+          summary: "book.ai backend is down"
           description: "Backend service has been down for more than 1 minute"
 
       - alert: FrontendDown
@@ -19,7 +19,7 @@ groups:
           severity: critical
           component: frontend
         annotations:
-          summary: "Sopher.AI frontend is unreachable"
+          summary: "book.ai frontend is unreachable"
           description: "Frontend service has been unreachable for more than 2 minutes"
 
       # Response time and performance alerts

@@ -373,7 +373,7 @@ export default function Home() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <BookOpen className="h-6 w-6 text-gold" />
-            <h1 className="text-2xl font-serif font-bold">sopher.ai</h1>
+            <h1 className="text-2xl font-serif font-bold">book.ai</h1>
           </div>
 
           <div className="flex items-center gap-4">
@@ -616,16 +616,16 @@ export default function Home() {
         </div>
       </main>
       <footer className="bg-indigo text-snow text-center text-sm py-4">
-        © 2025 sopher.ai •{' '}
+        © 2025 book.ai •{' '}
         <a
-          href="https://github.com/cheesejaguar/sopher.ai/blob/main/LICENSE"
+          href="https://github.com/cheesejaguar/book.ai/blob/main/LICENSE"
           className="underline"
         >
           MIT License
         </a>{' '}
         •{' '}
         <a
-          href="https://github.com/cheesejaguar/sopher.ai"
+          href="https://github.com/cheesejaguar/book.ai"
           className="underline"
         >
           GitHub Repository

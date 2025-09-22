@@ -2,7 +2,7 @@
 
 ## Overview
 
-The sopher.ai authentication system uses a **gradual rollout approach** to minimize disruption to existing API consumers while transitioning to mandatory authentication.
+The book.ai authentication system uses a **gradual rollout approach** to minimize disruption to existing API consumers while transitioning to mandatory authentication.
 
 ## Authentication Strategy
 
@@ -158,7 +158,7 @@ REQUIRE_AUTH = os.getenv("REQUIRE_AUTH", "true") == "true"
 
 async def get_current_user_optional(...):
     if not REQUIRE_AUTH:
-        return TokenData(user_id="anonymous", email="anonymous@sopher.ai", role="author")
+        return TokenData(user_id="anonymous", email="anonymous@book.ai", role="author")
     return get_current_user(...)
 ```
 
@@ -178,12 +178,12 @@ No changes needed - cookies are handled automatically.
 ### For API Clients
 Option 1: Use Bearer tokens
 ```bash
-curl -H "Authorization: Bearer $TOKEN" https://api.sopher.ai/api/v1/projects
+curl -H "Authorization: Bearer $TOKEN" https://api.book.ai/api/v1/projects
 ```
 
 Option 2: Use cookie authentication
 ```bash
-curl -b "access_token=$TOKEN" https://api.sopher.ai/api/v1/projects
+curl -b "access_token=$TOKEN" https://api.book.ai/api/v1/projects
 ```
 
 ## Timeline

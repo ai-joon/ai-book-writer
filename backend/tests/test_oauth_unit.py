@@ -70,7 +70,7 @@ class TestOAuthCore:
             "method": "GET",
             "path": "/",
             "query_string": b"",
-            "headers": [(b"x-forwarded-host", b"app.sopher.ai"), (b"x-forwarded-proto", b"https")],
+            "headers": [(b"x-forwarded-host", b"app.book.ai"), (b"x-forwarded-proto", b"https")],
             "server": ("backend", 8000),
         }
         request = Request(scope)
@@ -83,7 +83,7 @@ class TestOAuthCore:
         # Check domain is set correctly
         for cookie in cookies:
             if "access_token" in cookie or "refresh_token" in cookie:
-                assert "Domain=sopher.ai" in cookie
+                assert "Domain=book.ai" in cookie
                 assert "Secure" in cookie
 
     def test_clear_auth_cookies(self):

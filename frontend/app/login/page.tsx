@@ -51,7 +51,7 @@ export default function LoginPage() {
             <div className="flex justify-center mb-4">
               <BookOpen className="h-12 w-12 text-indigo-600" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">sopher.ai</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">book.ai</h1>
             <p className="text-gray-600">AI-Powered Book Writing System</p>
           </div>
 

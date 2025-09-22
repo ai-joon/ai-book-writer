@@ -7,7 +7,7 @@ const fraunces = Fraunces({ subsets: ['latin'], variable: '--font-fraunces' })
 const jetbrains = JetBrains_Mono({ subsets: ['latin'], variable: '--font-jetbrains-mono' })
 
 export const metadata: Metadata = {
-  title: 'sopher.ai - AI Book Writing System',
+  title: 'book.ai - AI Book Writing System',
   description: 'Transform your ideas into complete manuscripts with AI-powered writing assistance',
 }
 

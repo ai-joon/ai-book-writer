@@ -15,11 +15,11 @@ spec:
   ingressClassName: nginx
   tls:
   - hosts:
-    - sopher.ai
-    - api.sopher.ai
+    - book.ai
+    - api.book.ai
     secretName: sopher-ai-tls
   rules:
-  - host: sopher.ai
+  - host: book.ai
     http:
       paths:
       - path: /
@@ -29,7 +29,7 @@ spec:
             name: sopher-web-service
             port:
               number: 3000
-  - host: api.sopher.ai
+  - host: api.book.ai
     http:
       paths:
       - path: /

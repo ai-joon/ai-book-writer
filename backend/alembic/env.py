@@ -1,4 +1,4 @@
-"""Alembic environment configuration for sopher.ai database migrations."""
+"""Alembic environment configuration for book.ai database migrations."""
 
 import asyncio
 import os

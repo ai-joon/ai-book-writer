@@ -1,4 +1,4 @@
-# Semgrep ignore patterns for sopher.ai
+# Semgrep ignore patterns for book.ai
 #
 # These patterns suppress false positive security warnings where
 # we have properly architected the code to avoid actual vulnerabilities.

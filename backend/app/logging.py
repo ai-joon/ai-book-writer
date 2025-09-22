@@ -1,4 +1,4 @@
-"""GCP-compatible structured logging configuration for sopher.ai"""
+"""GCP-compatible structured logging configuration for book.ai"""
 
 import json
 import logging

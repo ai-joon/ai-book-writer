@@ -1,4 +1,4 @@
-# OAuth Setup Guide for sopher.ai
+# OAuth Setup Guide for book.ai
 
 ## Google Cloud Console Configuration
 
@@ -8,13 +8,13 @@
 4. Click "Create Credentials" > "OAuth 2.0 Client ID"
 5. Select "Web application" as the application type
 6. Configure the OAuth client:
-   - Name: `sopher.ai`
+   - Name: `book.ai`
    - Authorized JavaScript origins:
      - `http://localhost:3000` (for local development)
-     - `https://sopher.ai` (for production)
+     - `https://book.ai` (for production)
    - Authorized redirect URIs:
      - `http://localhost:3000/api/backend/auth/callback/google` (for local development)
-     - `https://sopher.ai/api/backend/auth/callback/google` (for production)
+     - `https://book.ai/api/backend/auth/callback/google` (for production)
 7. Save and copy the Client ID and Client Secret
 
 ## Environment Configuration
@@ -35,7 +35,7 @@ For production, set these environment variables in your deployment platform:
 ```bash
 GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your-client-secret
-GOOGLE_OAUTH_REDIRECT_URI=https://sopher.ai/api/backend/auth/callback/google
+GOOGLE_OAUTH_REDIRECT_URI=https://book.ai/api/backend/auth/callback/google
 ```
 
 ## Authentication Flow
@@ -57,7 +57,7 @@ GOOGLE_OAUTH_REDIRECT_URI=https://sopher.ai/api/backend/auth/callback/google
 ## Cookie Configuration
 
 The backend sets cookies with these characteristics:
-- **Domain**: `.sopher.ai` for production (allows subdomain access), none for localhost
+- **Domain**: `.book.ai` for production (allows subdomain access), none for localhost
 - **Path**: `/` (accessible across the entire site)
 - **SameSite**: `lax` (CSRF protection)
 - **Secure**: `true` in production (HTTPS only)

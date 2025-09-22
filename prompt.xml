@@ -1,4 +1,4 @@
-<project name="sopher.ai" owner=cheesejaguar>
+<project name="book.ai" owner=cheesejaguar>
   <context>
     Build a production-ready AI book-writing system that goes from author brief → outline → chapter drafts → edits → continuity checks → compiled manuscript.
     Target stack: LiteLLM router (OpenAI/Anthropic/Google), CrewAI multi-agent, FastAPI (SSE + WebSocket) backend with Redis + Postgres, Next.js 14 App Router frontend with streaming, Dockerized, deployable on GKE with HPA. 

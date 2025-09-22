@@ -1,6 +1,6 @@
 # Database Migrations
 
-This directory contains Alembic database migrations for sopher.ai.
+This directory contains Alembic database migrations for book.ai.
 
 ## Setup
 

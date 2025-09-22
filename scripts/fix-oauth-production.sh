@@ -10,8 +10,8 @@ echo "================================="
 echo ""
 echo "This script will help you update the OAuth redirect URI in production."
 echo ""
-echo "Current issue: OAuth redirect URI is set to api.sopher.ai which causes cookie domain mismatch."
-echo "Solution: Change redirect URI to route through frontend proxy at sopher.ai"
+echo "Current issue: OAuth redirect URI is set to api.book.ai which causes cookie domain mismatch."
+echo "Solution: Change redirect URI to route through frontend proxy at book.ai"
 echo ""
 
 # Check if kubectl is available
@@ -33,7 +33,7 @@ echo "Checking current OAuth configuration..."
 echo ""
 
 # Get current config from the API
-CURRENT_CONFIG=$(curl -s https://sopher.ai/api/backend/auth/config/status 2>/dev/null || echo "{}")
+CURRENT_CONFIG=$(curl -s https://book.ai/api/backend/auth/config/status 2>/dev/null || echo "{}")
 if [ "$CURRENT_CONFIG" != "{}" ]; then
     echo "Current redirect URI from API:"
     echo "$CURRENT_CONFIG" | grep -o '"redirect_uri":"[^"]*"' | cut -d'"' -f4
@@ -44,7 +44,7 @@ echo "Step 2: Update Google Cloud Console"
 echo "-----------------------------------"
 echo "Please update the authorized redirect URI in Google Cloud Console to:"
 echo ""
-echo "  https://sopher.ai/api/backend/auth/callback/google"
+echo "  https://book.ai/api/backend/auth/callback/google"
 echo ""
 echo "Navigate to: https://console.cloud.google.com/apis/credentials"
 echo "Edit your OAuth 2.0 Client ID and update the redirect URI"
@@ -87,7 +87,7 @@ if kubectl get secret sopherai-secrets -n sopher-ai &> /dev/null; then
         fi
         
         # Always update the redirect URI
-        PATCH_JSON+='"GOOGLE_OAUTH_REDIRECT_URI":"'$(echo -n "https://sopher.ai/api/backend/auth/callback/google" | base64)'"'
+        PATCH_JSON+='"GOOGLE_OAUTH_REDIRECT_URI":"'$(echo -n "https://book.ai/api/backend/auth/callback/google" | base64)'"'
         PATCH_JSON+='}}'
         
         kubectl patch secret sopherai-secrets -n sopher-ai --type='merge' -p="$PATCH_JSON"
@@ -95,7 +95,7 @@ if kubectl get secret sopherai-secrets -n sopher-ai &> /dev/null; then
         # Just update the redirect URI
         echo "Updating redirect URI only..."
         kubectl patch secret sopherai-secrets -n sopher-ai --type='json' \
-            -p='[{"op": "replace", "path": "/data/GOOGLE_OAUTH_REDIRECT_URI", "value": "'$(echo -n "https://sopher.ai/api/backend/auth/callback/google" | base64)'"}]'
+            -p='[{"op": "replace", "path": "/data/GOOGLE_OAUTH_REDIRECT_URI", "value": "'$(echo -n "https://book.ai/api/backend/auth/callback/google" | base64)'"}]'
     fi
     
     echo "Secret updated successfully!"
@@ -107,7 +107,7 @@ else
     echo "kubectl create secret generic sopherai-secrets -n sopher-ai \\"
     echo "  --from-literal=GOOGLE_CLIENT_ID=\"your-client-id\" \\"
     echo "  --from-literal=GOOGLE_CLIENT_SECRET=\"your-client-secret\" \\"
-    echo "  --from-literal=GOOGLE_OAUTH_REDIRECT_URI=\"https://sopher.ai/api/backend/auth/callback/google\""
+    echo "  --from-literal=GOOGLE_OAUTH_REDIRECT_URI=\"https://book.ai/api/backend/auth/callback/google\""
     exit 1
 fi
 
@@ -127,13 +127,13 @@ echo "Waiting for pods to restart (30 seconds)..."
 sleep 30
 
 echo "Checking new configuration..."
-NEW_CONFIG=$(curl -s https://sopher.ai/api/backend/auth/config/status 2>/dev/null || echo "{}")
+NEW_CONFIG=$(curl -s https://book.ai/api/backend/auth/config/status 2>/dev/null || echo "{}")
 if [ "$NEW_CONFIG" != "{}" ]; then
     echo "New configuration:"
     echo "$NEW_CONFIG" | python3 -m json.tool 2>/dev/null || echo "$NEW_CONFIG"
     
     # Check if redirect URI is correct
-    if echo "$NEW_CONFIG" | grep -q "https://sopher.ai/api/backend/auth/callback/google"; then
+    if echo "$NEW_CONFIG" | grep -q "https://book.ai/api/backend/auth/callback/google"; then
         echo ""
         echo "✅ Success! OAuth redirect URI has been updated correctly."
     else
@@ -148,8 +148,8 @@ echo ""
 echo "Step 6: Test OAuth Flow"
 echo "-----------------------"
 echo "Please test the OAuth flow:"
-echo "1. Clear all cookies for sopher.ai and api.sopher.ai"
-echo "2. Navigate to https://sopher.ai/login"
+echo "1. Clear all cookies for book.ai and api.book.ai"
+echo "2. Navigate to https://book.ai/login"
 echo "3. Click 'Sign in with Google'"
 echo "4. Complete the OAuth flow"
 echo "5. Verify you're redirected to the home page (not back to login)"

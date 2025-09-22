@@ -1,4 +1,4 @@
-"""API contract tests for sopher.ai backend"""
+"""API contract tests for book.ai backend"""
 
 import json
 from unittest.mock import AsyncMock, patch

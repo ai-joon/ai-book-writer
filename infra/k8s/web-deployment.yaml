@@ -45,7 +45,7 @@ spec:
         - name: BACKEND_URL
           value: "http://sopher-api-service:8000"
         - name: NEXT_PUBLIC_BACKEND_URL
-          value: "https://api.sopher.ai"
+          value: "https://api.book.ai"
         volumeMounts:
         - name: tmp-volume
           mountPath: /tmp

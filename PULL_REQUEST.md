@@ -2,7 +2,7 @@
 
 ## Summary
 
-This PR implements comprehensive authentication and usage tracking for sopher.ai, transforming it from an open system to a secure, user-aware platform with budget controls. Users now sign in with Google OAuth2, have their API usage tracked, and are prevented from exceeding monthly budgets.
+This PR implements comprehensive authentication and usage tracking for book.ai, transforming it from an open system to a secure, user-aware platform with budget controls. Users now sign in with Google OAuth2, have their API usage tracked, and are prevented from exceeding monthly budgets.
 
 ## Key Features
 
@@ -20,7 +20,7 @@ This PR implements comprehensive authentication and usage tracking for sopher.ai
 - **Detailed usage API** showing total, monthly, and remaining budget
 
 ### 🎯 User Experience Improvements
-- **Clean login page** with Google Sign-in button and sopher.ai branding
+- **Clean login page** with Google Sign-in button and book.ai branding
 - **Usage display in header** showing `$X.XX / $100` with remaining balance
 - **Cost estimation panel** displaying estimated costs before generation
 - **Automatic auth redirect** - unauthenticated users sent to login page
@@ -88,7 +88,7 @@ New required variables:
 ```bash
 GOOGLE_CLIENT_ID=<oauth_client_id>
 GOOGLE_CLIENT_SECRET=<oauth_client_secret>
-GOOGLE_OAUTH_REDIRECT_URI=https://api.sopher.ai/auth/callback/google
+GOOGLE_OAUTH_REDIRECT_URI=https://api.book.ai/auth/callback/google
 ```
 
 ## Testing
@@ -136,7 +136,7 @@ The system will automatically create the User table on first run via `init_db()`
 ### Login Page
 ```
 ┌─────────────────────────────────────┐
-│         📖 sopher.ai                │
+│         📖 book.ai                │
 │   AI-Powered Book Writing System    │
 │                                     │
 │   ┌─────────────────────────┐      │
@@ -151,7 +151,7 @@ The system will automatically create the User table on first run via `init_db()`
 ### Main App Header
 ```
 ┌─────────────────────────────────────────────────┐
-│ 📖 sopher.ai    💰 $5.43 / $100 | $94.57 left  │
+│ 📖 book.ai    💰 $5.43 / $100 | $94.57 left  │
 │                 👤 John Doe  🚪                 │
 └─────────────────────────────────────────────────┘
 ```

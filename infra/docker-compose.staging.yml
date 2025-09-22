@@ -9,8 +9,8 @@ services:
       ENVIRONMENT: staging
       LOG_LEVEL: DEBUG
       DEBUG: "false"
-      CORS_ORIGINS: "https://staging.sopher.ai"
-      NEXT_PUBLIC_BACKEND_URL: https://staging-api.sopher.ai
+      CORS_ORIGINS: "https://staging.book.ai"
+      NEXT_PUBLIC_BACKEND_URL: https://staging-api.book.ai
     deploy:
       replicas: 2
       resources:
@@ -23,7 +23,7 @@ services:
 
   frontend:
     environment:
-      NEXT_PUBLIC_BACKEND_URL: https://staging-api.sopher.ai
+      NEXT_PUBLIC_BACKEND_URL: https://staging-api.book.ai
       NEXT_PUBLIC_ENVIRONMENT: staging
     deploy:
       replicas: 2

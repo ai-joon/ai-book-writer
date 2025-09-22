@@ -2,7 +2,7 @@
 name = "sopher-ai-backend"
 version = "0.1.0"
 description = "AI book-writing system backend"
-authors = [{name = "sopher.ai", email = "admin@sopher.ai"}]
+authors = [{name = "book.ai", email = "admin@book.ai"}]
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.111.0",

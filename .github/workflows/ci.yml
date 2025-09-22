@@ -227,7 +227,7 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.repository_owner == 'cheesejaguar'
     environment:
       name: production
-      url: https://sopher.ai
+      url: https://book.ai
     
     steps:
     - uses: actions/checkout@v4
@@ -443,9 +443,9 @@ jobs:
         RETRY_INTERVAL=30
         
         # Test API health with retries
-        echo "Testing API health at https://api.sopher.ai/healthz"
+        echo "Testing API health at https://api.book.ai/healthz"
         for i in $(seq 1 $MAX_RETRIES); do
-          if curl -f https://api.sopher.ai/healthz; then
+          if curl -f https://api.book.ai/healthz; then
             echo "✓ API is healthy"
             break
           else
@@ -459,9 +459,9 @@ jobs:
         done
         
         # Test web health with retries
-        echo "Testing web health at https://sopher.ai"
+        echo "Testing web health at https://book.ai"
         for i in $(seq 1 $MAX_RETRIES); do
-          if curl -f https://sopher.ai; then
+          if curl -f https://book.ai; then
             echo "✓ Web is healthy"
             break
           else
