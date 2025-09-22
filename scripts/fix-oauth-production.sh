@@ -58,12 +58,12 @@ echo "This will update the GOOGLE_OAUTH_REDIRECT_URI in the Kubernetes secret"
 echo ""
 
 # Check if secret exists
-if kubectl get secret sopherai-secrets -n sopher-ai &> /dev/null; then
-    echo "Found existing secret 'sopherai-secrets' in namespace 'sopher-ai'"
+if kubectl get secret bookai-secrets -n book-ai &> /dev/null; then
+    echo "Found existing secret 'bookai-secrets' in namespace 'book-ai'"
     
     # Get current secret data
     echo "Backing up current secret..."
-    kubectl get secret sopherai-secrets -n sopher-ai -o yaml > oauth-secret-backup-$(date +%Y%m%d-%H%M%S).yaml
+    kubectl get secret bookai-secrets -n book-ai -o yaml > oauth-secret-backup-$(date +%Y%m%d-%H%M%S).yaml
     
     echo ""
     echo "Enter your Google OAuth credentials (or press Enter to keep existing):"
@@ -90,21 +90,21 @@ if kubectl get secret sopherai-secrets -n sopher-ai &> /dev/null; then
         PATCH_JSON+='"GOOGLE_OAUTH_REDIRECT_URI":"'$(echo -n "https://book.ai/api/backend/auth/callback/google" | base64)'"'
         PATCH_JSON+='}}'
         
-        kubectl patch secret sopherai-secrets -n sopher-ai --type='merge' -p="$PATCH_JSON"
+        kubectl patch secret bookai-secrets -n book-ai --type='merge' -p="$PATCH_JSON"
     else
         # Just update the redirect URI
         echo "Updating redirect URI only..."
-        kubectl patch secret sopherai-secrets -n sopher-ai --type='json' \
+        kubectl patch secret bookai-secrets -n book-ai --type='json' \
             -p='[{"op": "replace", "path": "/data/GOOGLE_OAUTH_REDIRECT_URI", "value": "'$(echo -n "https://book.ai/api/backend/auth/callback/google" | base64)'"}]'
     fi
     
     echo "Secret updated successfully!"
 else
-    echo "Error: Secret 'sopherai-secrets' not found in namespace 'sopher-ai'"
+    echo "Error: Secret 'bookai-secrets' not found in namespace 'book-ai'"
     echo ""
     echo "To create the secret, run:"
     echo ""
-    echo "kubectl create secret generic sopherai-secrets -n sopher-ai \\"
+    echo "kubectl create secret generic bookai-secrets -n book-ai \\"
     echo "  --from-literal=GOOGLE_CLIENT_ID=\"your-client-id\" \\"
     echo "  --from-literal=GOOGLE_CLIENT_SECRET=\"your-client-secret\" \\"
     echo "  --from-literal=GOOGLE_OAUTH_REDIRECT_URI=\"https://book.ai/api/backend/auth/callback/google\""
@@ -116,8 +116,8 @@ echo "Step 4: Restart Backend Pods"
 echo "----------------------------"
 echo "Restarting backend pods to pick up new configuration..."
 
-kubectl rollout restart deployment/sopher-backend -n sopher-ai 2>/dev/null || \
-    kubectl rollout restart deployment/backend -n sopher-ai 2>/dev/null || \
+kubectl rollout restart deployment/book-backend -n book-ai 2>/dev/null || \
+    kubectl rollout restart deployment/backend -n book-ai 2>/dev/null || \
     echo "Warning: Could not restart backend deployment. Please restart manually."
 
 echo ""

@@ -37,7 +37,7 @@ services:
 
   postgres:
     environment:
-      POSTGRES_DB: sopherai_staging
+      POSTGRES_DB: bookai_staging
 
   # Disable unnecessary services in staging
   grafana:

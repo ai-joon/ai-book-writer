@@ -1,5 +1,5 @@
 [project]
-name = "sopher-ai-backend"
+name = "book-ai-backend"
 version = "0.1.0"
 description = "AI book-writing system backend"
 authors = [{name = "book.ai", email = "admin@book.ai"}]

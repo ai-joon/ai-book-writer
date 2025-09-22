@@ -99,7 +99,7 @@ infra/
 └── nginx/
     ├── nginx.conf              # Main Nginx configuration
     └── conf.d/
-        └── sopher-ai.conf      # Application-specific configuration
+        └── book-ai.conf      # Application-specific configuration
 ```
 
 ## Environment Variables

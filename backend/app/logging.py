@@ -33,7 +33,7 @@ def severity_from_level(levelno: int) -> str:
 class GCPJSONFormatter(logging.Formatter):
     """JSON formatter that outputs GCP-compatible structured logs."""
 
-    def __init__(self, service_name: str = "sopher-api", service_version: Optional[str] = None):
+    def __init__(self, service_name: str = "book-api", service_version: Optional[str] = None):
         super().__init__()
         self.service_name = service_name
         self.service_version = service_version
@@ -134,7 +134,7 @@ def setup_logging() -> logging.Logger:
     # Get configuration from environment
     log_level = os.getenv("LOG_LEVEL", "INFO").upper()
     log_json = os.getenv("LOG_JSON", "true").lower() == "true"
-    service_name = os.getenv("SERVICE_NAME", "sopher-api")
+    service_name = os.getenv("SERVICE_NAME", "book-api")
     service_version = os.getenv("SERVICE_VERSION")
 
     # Configure root logger

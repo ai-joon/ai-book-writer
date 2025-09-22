@@ -30,7 +30,7 @@ GOOGLE_OAUTH_REDIRECT_URI=https://book.ai/api/backend/auth/callback/google
 ### 3. Update Kubernetes Secret
 
 ```bash
-kubectl create secret generic sopherai-secrets \
+kubectl create secret generic bookai-secrets \
   --from-literal=GOOGLE_CLIENT_ID="your-client-id" \
   --from-literal=GOOGLE_CLIENT_SECRET="your-client-secret" \
   --from-literal=GOOGLE_OAUTH_REDIRECT_URI="https://book.ai/api/backend/auth/callback/google" \

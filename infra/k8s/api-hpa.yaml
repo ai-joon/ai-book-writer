@@ -1,13 +1,13 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: sopher-api-hpa
-  namespace: sopher-ai
+  name: book-api-hpa
+  namespace: book-ai
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: sopher-api
+    name: book-api
   minReplicas: 2
   maxReplicas: 10
   behavior:

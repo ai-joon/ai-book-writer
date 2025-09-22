@@ -15,8 +15,8 @@ https://api.book.ai/auth/config/status
 
 For Kubernetes deployment:
 ```bash
-kubectl get pods -n sopher-ai
-kubectl exec -it <backend-pod-name> -n sopher-ai -- /bin/sh
+kubectl get pods -n book-ai
+kubectl exec -it <backend-pod-name> -n book-ai -- /bin/sh
 ```
 
 For direct server access:
@@ -34,7 +34,7 @@ kubectl create secret generic google-oauth \
   --from-literal=GOOGLE_CLIENT_ID="your-client-id.apps.googleusercontent.com" \
   --from-literal=GOOGLE_CLIENT_SECRET="your-client-secret" \
   --from-literal=GOOGLE_OAUTH_REDIRECT_URI="https://api.book.ai/auth/callback/google" \
-  -n sopher-ai
+  -n book-ai
 ```
 
 2. Update the deployment to use the secret:
@@ -51,7 +51,7 @@ spec:
 3. Apply the deployment:
 ```bash
 kubectl apply -f backend-deployment.yaml
-kubectl rollout restart deployment/backend -n sopher-ai
+kubectl rollout restart deployment/backend -n book-ai
 ```
 
 #### Option B: GitHub Secrets (for GitHub Actions deployment)
@@ -121,13 +121,13 @@ Expected response:
 Check backend logs for any issues:
 ```bash
 # Kubernetes
-kubectl logs -f deployment/backend -n sopher-ai
+kubectl logs -f deployment/backend -n book-ai
 
 # Docker
-docker logs -f sopher-ai-backend
+docker logs -f book-ai-backend
 
 # Direct
-tail -f /var/log/sopher-ai/backend.log
+tail -f /var/log/book-ai/backend.log
 ```
 
 ## Security Considerations
@@ -194,5 +194,5 @@ chmod +x test_oauth.sh
 
 For additional help with production deployment:
 - Check logs at https://api.book.ai/logs (if configured)
-- Review Kubernetes events: `kubectl get events -n sopher-ai`
+- Review Kubernetes events: `kubectl get events -n book-ai`
 - Check GitHub Actions logs for deployment issues

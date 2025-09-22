@@ -10,7 +10,7 @@
 # The semgrep rule is overly broad and flags any add_header in location blocks,
 # even when there are no server-level headers to conflict with.
 #
-# Files affected: infra/nginx/nginx.conf, infra/nginx/conf.d/sopher-ai.conf
+# Files affected: infra/nginx/nginx.conf, infra/nginx/conf.d/book-ai.conf
 # Rule: generic.nginx.security.header-redefinition.header-redefinition
 infra/nginx/
 

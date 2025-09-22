@@ -74,7 +74,7 @@ class TestCookieDomainBehavior:
         for cookie in cookies:
             assert "Domain=" not in cookie
 
-    def test_production_domain_sopher_ai(self):
+    def test_production_domain_book_ai(self):
         """Test production domain setting for book.ai."""
         response = Response()
         request = self.create_request(
@@ -319,8 +319,8 @@ class TestCookieDomainBehavior:
         # Internationalized domain names or special cases
         test_cases = [
             "xn--spher-nua.ai",  # IDN encoded
-            "sopher-ai.com",  # Hyphenated
-            "sopher_ai.com",  # Underscore (technically invalid but test handling)
+            "book-ai.com",  # Hyphenated
+            "book_ai.com",  # Underscore (technically invalid but test handling)
         ]
 
         for domain in test_cases:

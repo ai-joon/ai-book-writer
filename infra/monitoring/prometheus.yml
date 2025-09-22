@@ -3,7 +3,7 @@ global:
   scrape_timeout: 10s
   evaluation_interval: 15s
   external_labels:
-    cluster: 'sopher-ai-prod'
+    cluster: 'book-ai-prod'
     environment: 'production'
 
 rule_files:
@@ -11,7 +11,7 @@ rule_files:
 
 scrape_configs:
   # FastAPI Backend Metrics
-  - job_name: 'sopher-backend'
+  - job_name: 'book-backend'
     static_configs:
       - targets: ['backend:9000']
     scrape_interval: 15s
@@ -74,7 +74,7 @@ scrape_configs:
     honor_labels: true
 
   # Application-specific Custom Metrics
-  - job_name: 'sopher-ai-custom'
+  - job_name: 'book-ai-custom'
     static_configs:
       - targets: ['backend:9000']
     scrape_interval: 10s

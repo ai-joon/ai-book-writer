@@ -67,7 +67,7 @@ class TestCookieHandling:
             # We'll need to inspect the actual cookie setting
             # This is a simplified test - in real implementation we'd mock set_cookie
             with patch.dict(
-                "os.environ", {"ENVIRONMENT": "production" if "sopher" in host else "development"}
+                "os.environ", {"ENVIRONMENT": "production" if "book" in host else "development"}
             ):
                 set_auth_cookies(response, "token", "refresh", request)
 

@@ -30,7 +30,7 @@ target_metadata = Base.metadata
 
 # Get database URL from environment or use default
 database_url = os.getenv(
-    "DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5432/sopherai"
+    "DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5432/bookai"
 )
 config.set_main_option("sqlalchemy.url", database_url)
 

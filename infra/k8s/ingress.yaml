@@ -1,8 +1,8 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: sopher-ai-ingress
-  namespace: sopher-ai
+  name: book-ai-ingress
+  namespace: book-ai
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
@@ -17,7 +17,7 @@ spec:
   - hosts:
     - book.ai
     - api.book.ai
-    secretName: sopher-ai-tls
+    secretName: book-ai-tls
   rules:
   - host: book.ai
     http:
@@ -26,7 +26,7 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: sopher-web-service
+            name: book-web-service
             port:
               number: 3000
   - host: api.book.ai
@@ -36,6 +36,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: sopher-api-service
+            name: book-api-service
             port:
               number: 8000

@@ -37,14 +37,14 @@ This change also requires updating the authorized redirect URI in the Google Clo
 Update the Kubernetes secret with the new redirect URI:
 
 ```bash
-kubectl edit secret sopher-ai-secrets -n sopher-ai
+kubectl edit secret book-ai-secrets -n book-ai
 ```
 
 Then update the `GOOGLE_OAUTH_REDIRECT_URI` value (base64 encoded).
 
 Or use this command:
 ```bash
-kubectl patch secret sopher-ai-secrets -n sopher-ai --type='json' \
+kubectl patch secret book-ai-secrets -n book-ai --type='json' \
   -p='[{"op": "replace", "path": "/data/GOOGLE_OAUTH_REDIRECT_URI", "value": "'$(echo -n "https://book.ai/api/backend/auth/callback/google" | base64)'"}]'
 ```
 

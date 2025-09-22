@@ -36,7 +36,7 @@ jobs:
         image: postgres:16
         env:
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: sopherai_test
+          POSTGRES_DB: bookai_test
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -86,7 +86,7 @@ jobs:
     - name: Run tests with coverage
       working-directory: ./backend
       env:
-        DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/sopherai_test
+        DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/bookai_test
         REDIS_URL: redis://localhost:6379/0
         JWT_SECRET: test-secret
       run: |
@@ -180,7 +180,7 @@ jobs:
       id: meta
       uses: docker/metadata-action@v5
       with:
-        images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/sopher-${{ matrix.component }}
+        images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/book-${{ matrix.component }}
         tags: |
           type=ref,event=branch
           type=ref,event=pr
@@ -198,10 +198,10 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: |
           type=gha,scope=${{ matrix.component }}
-          type=registry,ref=${{ env.REGISTRY }}/${{ github.repository_owner }}/sopher-${{ matrix.component }}:cache
+          type=registry,ref=${{ env.REGISTRY }}/${{ github.repository_owner }}/book-${{ matrix.component }}:cache
         cache-to: |
           type=gha,mode=max,scope=${{ matrix.component }}
-          type=registry,ref=${{ env.REGISTRY }}/${{ github.repository_owner }}/sopher-${{ matrix.component }}:cache,mode=max
+          type=registry,ref=${{ env.REGISTRY }}/${{ github.repository_owner }}/book-${{ matrix.component }}:cache,mode=max
         platforms: linux/amd64
         build-args: |
           BUILDKIT_INLINE_CACHE=1
@@ -211,7 +211,7 @@ jobs:
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@0.24.0
       with:
-        image-ref: ${{ env.REGISTRY }}/${{ github.repository_owner }}/sopher-${{ matrix.component }}:${{ steps.meta.outputs.version }}
+        image-ref: ${{ env.REGISTRY }}/${{ github.repository_owner }}/book-${{ matrix.component }}:${{ steps.meta.outputs.version }}
         format: 'sarif'
         output: 'trivy-results.sarif'
     
@@ -301,24 +301,24 @@ jobs:
       run: |
         echo "Checking if Docker images are available in GitHub Container Registry..."
         # Check backend image
-        if docker manifest inspect ${{ env.REGISTRY }}/${{ github.repository_owner }}/sopher-backend:latest >/dev/null 2>&1; then
-          echo "✓ Backend image found: ${{ env.REGISTRY }}/${{ github.repository_owner }}/sopher-backend:latest"
+        if docker manifest inspect ${{ env.REGISTRY }}/${{ github.repository_owner }}/book-backend:latest >/dev/null 2>&1; then
+          echo "✓ Backend image found: ${{ env.REGISTRY }}/${{ github.repository_owner }}/book-backend:latest"
         else
           echo "✗ Backend image NOT found!"
           echo "Available tags for backend:"
           curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            https://ghcr.io/v2/${{ github.repository_owner }}/sopher-backend/tags/list || true
+            https://ghcr.io/v2/${{ github.repository_owner }}/book-backend/tags/list || true
           exit 1
         fi
         
         # Check frontend image
-        if docker manifest inspect ${{ env.REGISTRY }}/${{ github.repository_owner }}/sopher-frontend:latest >/dev/null 2>&1; then
-          echo "✓ Frontend image found: ${{ env.REGISTRY }}/${{ github.repository_owner }}/sopher-frontend:latest"
+        if docker manifest inspect ${{ env.REGISTRY }}/${{ github.repository_owner }}/book-frontend:latest >/dev/null 2>&1; then
+          echo "✓ Frontend image found: ${{ env.REGISTRY }}/${{ github.repository_owner }}/book-frontend:latest"
         else
           echo "✗ Frontend image NOT found!"
           echo "Available tags for frontend:"
           curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            https://ghcr.io/v2/${{ github.repository_owner }}/sopher-frontend/tags/list || true
+            https://ghcr.io/v2/${{ github.repository_owner }}/book-frontend/tags/list || true
           exit 1
         fi
     
@@ -337,7 +337,7 @@ jobs:
         POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
       run: |
         # Create namespace if it doesn't exist
-        kubectl create namespace sopher-ai --dry-run=client -o yaml | kubectl apply -f -
+        kubectl create namespace book-ai --dry-run=client -o yaml | kubectl apply -f -
         
         # Install NGINX Ingress Controller if not present
         echo "Checking for NGINX Ingress Controller..."
@@ -394,46 +394,46 @@ jobs:
         kubectl apply -f infra/k8s/ingress.yaml
         
         # Update image tags to latest (which points to the just-built images from main branch)
-        echo "Setting image for sopher-api to: ${{ env.REGISTRY }}/${{ github.repository_owner }}/sopher-backend:latest"
-        kubectl set image deployment/sopher-api \
-          api=${{ env.REGISTRY }}/${{ github.repository_owner }}/sopher-backend:latest \
-          -n sopher-ai
+        echo "Setting image for book-api to: ${{ env.REGISTRY }}/${{ github.repository_owner }}/book-backend:latest"
+        kubectl set image deployment/book-api \
+          api=${{ env.REGISTRY }}/${{ github.repository_owner }}/book-backend:latest \
+          -n book-ai
         
-        echo "Setting image for sopher-web to: ${{ env.REGISTRY }}/${{ github.repository_owner }}/sopher-frontend:latest"
-        kubectl set image deployment/sopher-web \
-          web=${{ env.REGISTRY }}/${{ github.repository_owner }}/sopher-frontend:latest \
-          -n sopher-ai
+        echo "Setting image for book-web to: ${{ env.REGISTRY }}/${{ github.repository_owner }}/book-frontend:latest"
+        kubectl set image deployment/book-web \
+          web=${{ env.REGISTRY }}/${{ github.repository_owner }}/book-frontend:latest \
+          -n book-ai
         
         # Force pull to get the latest image
-        kubectl rollout restart deployment/sopher-api -n sopher-ai
-        kubectl rollout restart deployment/sopher-web -n sopher-ai
+        kubectl rollout restart deployment/book-api -n book-ai
+        kubectl rollout restart deployment/book-web -n book-ai
         
         # Wait for rollout with extended timeout and better error handling
         echo "Waiting for API deployment rollout..."
-        if ! kubectl rollout status deployment/sopher-api -n sopher-ai --timeout=600s; then
+        if ! kubectl rollout status deployment/book-api -n book-ai --timeout=600s; then
           echo "API deployment rollout failed. Getting pod logs..."
-          kubectl get pods -n sopher-ai -l app=sopher-api
-          kubectl describe pods -n sopher-ai -l app=sopher-api
-          kubectl logs -n sopher-ai -l app=sopher-api --previous --tail=100 || true
-          kubectl logs -n sopher-ai -l app=sopher-api --tail=100 || true
+          kubectl get pods -n book-ai -l app=book-api
+          kubectl describe pods -n book-ai -l app=book-api
+          kubectl logs -n book-ai -l app=book-api --previous --tail=100 || true
+          kubectl logs -n book-ai -l app=book-api --tail=100 || true
           exit 1
         fi
         
         echo "Waiting for Web deployment rollout..."
-        if ! kubectl rollout status deployment/sopher-web -n sopher-ai --timeout=600s; then
+        if ! kubectl rollout status deployment/book-web -n book-ai --timeout=600s; then
           echo "Web deployment rollout failed. Getting pod logs..."
-          kubectl get pods -n sopher-ai -l app=sopher-web
-          kubectl describe pods -n sopher-ai -l app=sopher-web
-          kubectl logs -n sopher-ai -l app=sopher-web --previous --tail=100 || true
-          kubectl logs -n sopher-ai -l app=sopher-web --tail=100 || true
+          kubectl get pods -n book-ai -l app=book-web
+          kubectl describe pods -n book-ai -l app=book-web
+          kubectl logs -n book-ai -l app=book-web --previous --tail=100 || true
+          kubectl logs -n book-ai -l app=book-web --tail=100 || true
           exit 1
         fi
         
         # Verify deployment status
         echo "Checking deployment status..."
-        kubectl get pods -n sopher-ai
-        kubectl get services -n sopher-ai
-        kubectl get ingress -n sopher-ai
+        kubectl get pods -n book-ai
+        kubectl get services -n book-ai
+        kubectl get ingress -n book-ai
     
     - name: Run smoke tests
       run: |
